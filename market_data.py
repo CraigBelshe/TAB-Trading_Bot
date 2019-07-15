@@ -1,8 +1,10 @@
-import sqlite3
-import requests
-from datetime import datetime
-import constants
 import time
+from datetime import datetime
+import sqlite3
+
+import requests
+
+import constants
 
 
 #
@@ -27,11 +29,13 @@ class MarketDataInterface:
     def __init__(self):
         pass
 
-    def get_current_ticker(self, pairs):
-        pass
+    def get_current_prev_ticker(self, pairs, past):
 
-    def get_prev_ticker(self, pairs):
-        pass
+        if past is True:
+            pass
+
+        else:
+            pass
 
     def get_all_ticker(self, pairs):
         pass

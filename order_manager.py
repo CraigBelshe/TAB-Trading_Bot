@@ -1,9 +1,11 @@
-import requests
-import constants
 import hmac
 import hashlib
 import time
+
+import requests
+
 import settings
+import constants
 
 
 class OrderManager:
@@ -17,7 +19,7 @@ class OrderManager:
         pass
 
     def check_order(self):
-        return result, price, amount
+        return result, order_details
 
     def buy(self, pair, price, risk):
         pass

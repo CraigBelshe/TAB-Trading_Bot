@@ -1,6 +1,6 @@
 
 class TradingStrategy:
-    def __init__(self, market):
+    def __init__(self, pair):
         pass
 
     def get_actions(self, prev_ticker, current_ticker):
