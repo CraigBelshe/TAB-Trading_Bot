@@ -32,9 +32,10 @@ class MarketDataInterface:
                 'SELECT * FROM ticker WHERE pair="{pair}" AND ORDER BY id LIMIT 1'.format(pair=self.pairs)
             )[0]
 
-    def get_all_ticker(self):
+    def get_all_ticker(self, num_amount):
         return utils.sql_fetch(
-            'SELECT * FROM ticker WHERE pair = {pair}'.format(pair=self.pairs)
+            'SELECT * FROM ticker WHERE pair ="{pair}" AND ORDER BY id LIMIT {amount}'
+            .format(pair=self.pairs, amount=num_amount)
         )
 
     def get_order_book_asks(self):
