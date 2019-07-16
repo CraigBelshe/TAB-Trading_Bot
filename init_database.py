@@ -7,6 +7,7 @@ cursor = connection.cursor()
 
 ticker_init = '''
     CREATE TABLE ticker (
+    id PRIMARY KEY,
     pair CHAR(6),
     date TIMESTAMP,
     value FLOAT,
@@ -22,6 +23,7 @@ create_trigger = '''
 
 order_book_init = '''
     CREATE TABLE order_book (
+    id PRIMARY KEY,
     type TINYTEXT,
     pair CHAR(6),
     price FLOAT,

@@ -19,13 +19,13 @@ def main():
 
     running = True
 
-    md = MarketDataInterface()
+    md = MarketDataInterface(pair)
     ts = TradingStrategy(pair)
     om = OrderManager()
 
     while running:
-        prev_ticker = md.get_current_prev_ticker(pair, True)
-        current_ticker = md.get_current_prev_ticker(pair, False)
+        prev_ticker = md.get_current_prev_ticker(True)
+        current_ticker = md.get_current_prev_ticker(False)
         actions = ts.get_actions(prev_ticker, current_ticker)
         risk = ts.get_risk(prev_ticker, current_ticker)
         price = current_ticker['value']
