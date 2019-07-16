@@ -28,6 +28,7 @@ def main():
         current_ticker = md.get_current_prev_ticker(pair, False)
         actions = ts.get_actions(prev_ticker, current_ticker)
         risk = ts.get_risk(prev_ticker, current_ticker)
+        price = current_ticker['value']
 
         for action in actions:
             if action == "buy":

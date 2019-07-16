@@ -23,6 +23,7 @@ create_trigger = '''
 order_book_init = '''
     CREATE TABLE order_book (
     type TINYTEXT,
+    pair CHAR(6),
     price FLOAT,
     amount FLOAT);'''
 
