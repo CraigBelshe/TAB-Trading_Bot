@@ -12,10 +12,16 @@ class MarketData:
     def __init__(self):
         pass
 
-    def update_ticker(self, pairs):
+    def get_ticker(self, pairs):
         pass
 
-    def update_order_book(self, pairs):
+    def update_ticker_table(self, pairs):
+        pass
+
+    def get_order_book(self, pairs):
+        pass
+
+    def update_order_book_table(self, pairs):
         pass
 
     def get_transactions(self, pairs):
@@ -38,4 +44,10 @@ class MarketDataInterface:
             pass
 
     def get_all_ticker(self, pairs):
+        pass
+
+    def get_order_book_bids(self, pairs):
+        pass
+
+    def get_order_book_asks(self, pairs):
         pass
