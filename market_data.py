@@ -98,9 +98,11 @@ class MarketDataInterface:
                         .format(pairs=self.market, ask=ask[0], amount=ask[1])
                     )
                 logging.info('order book updated')
+                self.order_cnt = 0
 
             else:
-                pass
+                self.order_cnt += 1
+
         except requests.exceptions.RequestException:
             logging.warning('request for order book failed')
 
@@ -118,6 +120,7 @@ class MarketDataInterface:
 
 def main(market):
     md = MarketDataInterface(market)
+    logging.info("beginning md update loop")
     while True:
         md.update_ticker()
         md.update_order_book()
@@ -127,3 +130,4 @@ def main(market):
 if __name__ == "__main__":
     logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.ERROR)
     main(sys.argv[1])
+    logging.info("md update loop stopped")
