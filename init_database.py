@@ -37,19 +37,19 @@ order_book_init = '''
     amount FLOAT);'''
 
 cursor.execute(' SELECT count(name) FROM sqlite_master WHERE type="table" AND name="ticker"')
-if cursor.fetchone()[0] != 1:
+if cursor.fetchone()[0] == 0:
     cursor.execute(ticker_init)
 
 cursor.execute('SELECT count(name) FROM sqlite_master WHERE type="table" AND name="order_book"')
-if cursor.fetchone()[0] != 1:
+if cursor.fetchone()[0] == 0:
     cursor.execute(order_book_init)
 
 cursor.execute('SELECT count(name) FROM sqlite_master WHERE type="trigger" AND name="queue"')
-if cursor.fetchone()[0] != 1:
+if cursor.fetchone()[0] == 0:
     cursor.execute(create_ticker_trigger)
 
 cursor.execute('SELECT count(name) FROM sqlite_master WHERE type="trigger" AND name="queue2"')
-if cursor.fetchone()[0] != 1:
+if cursor.fetchone()[0] == 0:
     cursor.execute(create_order_trigger)
 
 connection.commit()
