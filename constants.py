@@ -1,1 +1,1 @@
-database = 'tab_market_data.db'
+DATABASE = 'tab_market_data.db'
