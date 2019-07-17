@@ -25,32 +25,34 @@ class MarketDataInterface:
 
         if previous is True:
             return utils.sql_fetch(
-                'SELECT * FROM ticker WHERE pair="{pair}" AND ORDER BY id LIMIT 2'.format(pair=self.pairs)
+                'SELECT * FROM ticker WHERE pair="{pair}" ORDER BY id DESC LIMIT 2'.format(pair=self.pairs)
             )[1]
         else:
             return utils.sql_fetch(
-                'SELECT * FROM ticker WHERE pair="{pair}" AND ORDER BY id LIMIT 1'.format(pair=self.pairs)
+                'SELECT * FROM ticker WHERE pair="{pair}" ORDER BY id DESC LIMIT 1'.format(pair=self.pairs)
             )[0]
 
-    def get_all_ticker(self):
+    def get_all_ticker(self, num_amount):
         return utils.sql_fetch(
-            'SELECT * FROM ticker WHERE pair = {pair}'.format(pair=self.pairs)
+            'SELECT * FROM ticker WHERE pair ="{pair}" ORDER BY id DESC LIMIT {amount}'
+            .format(pair=self.pairs, amount=num_amount)
         )
 
     def get_order_book_asks(self):
         return utils.sql_fetch(
-            'SELECT * FROM ticker WHERE (type="ask" AND pair="{pair}")'.format(pair=self.pairs)
+            'SELECT * FROM order_book WHERE (type="ask" AND pair="{pair}")'.format(pair=self.pairs)
         )
 
     def get_order_book_bids(self):
         return utils.sql_fetch(
-            'SELECT * FROM ticker WHERE (type="bid" AND pair="{pair}")'.format(pair=self.pairs)
+            'SELECT * FROM order_book WHERE (type="bid" AND pair="{pair}")'.format(pair=self.pairs)
         )
 
 # Updating Database
     def update_ticker_table(self):
         utils.sql_exec(
-            'INSERT INTO ticker VALUES ("{pair}", "{date}", "{value}", "{volume}", "{vwap}")'
+            'INSERT INTO ticker (pair, date, value, volume, vwap) VALUES '
+            '("{pair}", "{date}", "{value}", "{volume}", "{vwap}")'
             .format(pair=self.pairs, date=self.date, value=self.value, volume=self.volume, vwap=self.vwap)
         )
 
@@ -69,7 +71,7 @@ class MarketDataInterface:
 
 # Getting from exchange
     def get_ticker(self):
-        ticker = (requests.get(constants.bitstamp_ticker_addr + self.pairs))
+        ticker = (requests.get(constants.bitstamp_ticker_addr + self.pairs)).json()
         self.vwap = float(ticker[constants.vwap])
         self.volume = float(ticker[constants.volume])
         self.value = float(ticker[constants.value])
@@ -92,17 +94,3 @@ class MarketDataInterface:
         self.sell_eur = convert['sell']
 
 
-pair = 'btcusd'
-i = 0
-info = MarketDataInterface(pair)
-while i < 10:
-    info.get_ticker()
-    info.get_order_book()
-    info.update_ticker_table()
-    info.update_order_book_table()
-    time.sleep(10)
-print info.get_ticker_data(True)
-print info.get_ticker_data(False)
-print info.get_order_book_asks()
-print info.get_order_book_bids()
-print info.get_all_ticker()
