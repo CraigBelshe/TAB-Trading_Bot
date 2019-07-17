@@ -24,8 +24,8 @@ def main():
     om = OrderManager()
 
     while running:
-        prev_ticker = md.get_current_prev_ticker(True)
-        current_ticker = md.get_current_prev_ticker(False)
+        prev_ticker = md.get_ticker_data(True)
+        current_ticker = md.get_ticker_data(False)
         actions = ts.get_actions(prev_ticker, current_ticker)
         risk = ts.get_risk(prev_ticker, current_ticker)
         price = current_ticker['value']
