@@ -2,8 +2,9 @@ import sqlite3
 
 import constants
 
+
 def sql_exec(statement):
-    connection = sqlite3.connect(constants.database)
+    connection = sqlite3.connect(constants.DATABASE)
     cursor = connection.cursor()
     cursor.execute(statement)
     connection.commit()
@@ -11,7 +12,7 @@ def sql_exec(statement):
 
 
 def sql_fetch(statement):
-    connection = sqlite3.connect(constants.database)
+    connection = sqlite3.connect(constants.DATABASE)
     cursor = connection.cursor()
     cursor.execute(statement)
     data = cursor.fetchall()
