@@ -22,42 +22,43 @@ def main():
 
     md = MarketDataInterface(pair)
     ts = TradingStrategy(pair)
-    om = OrderManager()
+    om = OrderManager(pair)
 
     while running:
-        prev_ticker = md.get_ticker_data(True)
         current_ticker = md.get_ticker_data(False)
-        actions = ts.get_actions(prev_ticker, current_ticker)
-        risk = ts.get_risk(prev_ticker, current_ticker)
+        action = ts.get_final_strat()
         price = current_ticker['value']
 
-        for action in actions:
-            if action == "buy":
-                result, order_details = om.buy(pair=pair, risk=risk, price=price)
-                if result:
-                    logging.info('Successfully bought {0} at ${1}'.format(order_details['actual_amount'], order_details['actual_end_price']))
-                else:
-                    logging.info('Buy failed')
-
-            elif action == "sell":
-                result, order_details = om.sell(pair=pair, risk=risk, price=price)
-                if result:
-                    logging.info('Successfully sold {0} at ${1}'.format(order_details['actual_amount'], order_details['actual_end_price']))
-                else:
-                    logging.info('Sell failed')
-
-            elif action == "wait":
+        if action['action'] == "buy":
+            result = om.buy(risk=action['risk'], price=price)
+            if result[0]:
+                logging.info('Successfully bought {0} at ${1}'.format(result[2], result[1]))
                 result = True
-                logging.info('Waited 10s, did not trade')
-
             else:
-                running = False
+                logging.info('Buy failed')
                 result = False
-                logging.error('Unsupported action')
 
-            return running, result
+        elif action['action'] == 'sell':
+            result = om.sell(risk=action['risk'], price=price)
+            if result[0]:
+                logging.info('Successfully sold {0} at ${1}'.format(result[2], result[1]))
+                result = True
+            else:
+                logging.info('Sell failed')
+                result = False
+
+        elif action['action'] == 'wait':
+            result = True
+            logging.info('Waited 10s, did not trade')
+
+        else:
+            running = False
+            result = False
+            logging.error('Unsupported action')
 
         time.sleep(settings.MAIN_TIMER)
+        if not result:
+            print 'order error'
 
 
 if __name__ == '__main__':
