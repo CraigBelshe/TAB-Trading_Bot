@@ -1,0 +1,7 @@
+LOOP_TIME = 60
+UPDATE_ORDER_FREQ = 60
+MAIN_TIMER = 300
+CUSTOMER_ID = '1234cba'
+API_KEY = 'abc4321'
+API_SECRET = 'qrupadgjl'
+DATABASE = 'tab_market_data.db'
