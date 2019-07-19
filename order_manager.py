@@ -1,6 +1,7 @@
 import hmac
 import hashlib
 import time
+import logging
 
 import requests
 
@@ -17,7 +18,7 @@ class OrderManager:
         self.order = {}
         self.market = market
 
-    def signature_gen(self):
+    def get_signature(self):  #
         self.nonce = str(int(time.time()))
         message = self.nonce + self.customer_id + self.api_key
         signature = hmac.new(
@@ -26,120 +27,159 @@ class OrderManager:
             digestmod=hashlib.sha256).hexdigest().upper()
         return signature
 
-    def get_balance(self):
-        sig = self.signature_gen()
+    def get_balance(self):  #
+        sig = self.get_signature()
         balance_data = {'key': self.api_key, 'signature': sig, 'nonce': self.nonce}
-        account_balance = requests.post((constants.BITSTAMP_API_ENDPOINT.format(command='balance', market=self.market)),
-                                        data=balance_data)
-        account = account_balance.json()
-        currency = self.market[-3:]
-        balance = account[currency + '_balance']
-        available = account[currency + '_available']
-        reserved = account[currency + '_reserved']
-        account_balance = {'balance': balance, 'available': available, 'reserved': reserved}
+        account = requests.post((constants.BITSTAMP_API_ENDPOINT.format(command='balance', market=self.market)),
+                                data=balance_data).json()
+        currency = self.market[:-3]
+        balance = account.get('{currency}_balance'.format(currency=currency))
+        available = account.get('{currency}_available'.format(currency=currency))
+        reserved = account.get('{currency}_reserved'.format(currency=currency))
+        usd_available = account.get('usd_available')
+        account_balance = {'balance': balance, 'available': available, 'reserved': reserved,
+                           'usd_available': usd_available}
         return account_balance
 
-    def check_order(self):
-        if self.order['status'] != 'error':
-            result = True
-            price = self.order['price']
-            amount = self.order['amount']
-        else:
+    def check_order(self):  #
+        if self.order.get('status', []) == 'error':
             result = False
+            logging.error(self.order['reason'])
             price = 0
             amount = 0
-        return [result, price, amount]
+            order_id = 0
+        else:
+            result = True
+            price = self.order.get('price')
+            amount = self.order.get('amount')
+            order_id = self.order.get('id')
+        return [result, price, amount, order_id]
 
-    def buy(self, price, risk):
-        balance = self.get_balance()
+    def buy(self, price, amount):  #
 
-        amount = balance['available'] * risk / price
-        sig = self.signature_gen()
-        data = {'key': self.api_key, 'signature': sig, 'nonce': self.nonce, 'amount': amount, 'price': price}
+        sig = self.get_signature()
+        buy_data = {'key': self.api_key, 'signature': sig, 'nonce': self.nonce, 'amount': amount, 'price': price}
         buy_limit_order = requests.post((constants.BITSTAMP_API_ENDPOINT.format(command='buy', market=self.market)),
-                                        data=data)
-        self.order = buy_limit_order.json()
+                                        data=buy_data).json()
+        if 'id' in buy_limit_order:
+            return buy_limit_order['id']
 
-        return self.check_order()
+        logging.info('buy order failed, {}'.format(buy_limit_order))
+        return None
 
-    def sell(self, price, risk):
-        balance = self.get_balance()
-
-        amount = balance['available'] * risk
-        sig = self.signature_gen()
-        data = {'key': self.api_key, 'signature': sig, 'nonce': self.nonce, 'amount': amount, 'price': price}
+    def sell(self, price, amount):  #
+        sig = self.get_signature()
+        sell_data = {'key': self.api_key, 'signature': sig, 'nonce': self.nonce, 'amount': amount, 'price': price}
         sell_limit_order = requests.post((constants.BITSTAMP_API_ENDPOINT.format(command='sell', market=self.market)),
-                                         json=data)
-        self.order = sell_limit_order.json()
+                                         data=sell_data).json()
+        print sell_limit_order
+        if 'id' in sell_limit_order:
+            return sell_limit_order['id']
 
-        return self.check_order()
+        logging.info('sell order failed, {}'.format(sell_limit_order))
+        return None
 
-    def buy_instant(self, amount):
-        sig = self.signature_gen()
+    def instant_buy(self, amount):
+        sig = self.get_signature()
         data = {'key': self.api_key, 'signature': sig, 'nonce': self.nonce, 'amount': amount}
         buy_inst = requests.post((constants.BITSTAMP_API_ENDPOINT.format(command='buy/instant', market=self.market)),
-                                 json=data)
-        self.order = buy_inst.json()
+                                 data=data).json()
+        if 'id' in buy_inst:
+            return buy_inst['id']
 
-        return self.check_order()
+        logging.info('instant buy order failed, {}'.format(buy_inst))
+        return None
 
-    def sell_instant(self, amount):
-        sig = self.signature_gen()
+    def instant_sell(self, amount):
+        sig = self.get_signature()
         data = {'key': self.api_key, 'signature': sig, 'nonce': self.nonce, 'amount': amount}
         sell_inst = requests.post((constants.BITSTAMP_API_ENDPOINT.format(command='sell/instant', market=self.market)),
-                                  json=data)
-        self.order = sell_inst.json()
+                                  data=data).json()
+        if 'id' in sell_inst:
+            return sell_inst['id']
 
-        return self.check_order()
+        logging.info('instant sell order failed, {}'.format(sell_inst))
+        return None
 
-    def cancel_all_orders(self):
-        sig = self.signature_gen()
-        data = {'key': self.api_key, 'signature': sig, 'nonce': self.nonce}
-        cancel_ord = requests.post((constants.BITSTAMP_API_ONE.format(command='cancel_all_orders')),
-                                   json=data)
-        res = cancel_ord.json()
-        return res
+    def cancel_all_orders(self):  #
+        sig = self.get_signature()
+        cancel_data = {'key': self.api_key, 'signature': sig, 'nonce': self.nonce}
+        cancel_order = requests.post((constants.BITSTAMP_API_ONE.format(command='cancel_all_orders')),
+                                     data=cancel_data).json()
+        if cancel_order is True:
+            return cancel_order
 
-    def cancel_order(self, id_num):
-        sig = self.signature_gen()
-        data = {'key': self.api_key, 'signature': sig, 'nonce': self.nonce, 'id': id_num}
-        cancel_ord = requests.post(constants.BITSTAMP_API_NM.format(command='cancel_order'), json=data)
-        return cancel_ord.json()
+        logging.info('failed to cancel all orders, {}'.format(cancel_order))
+        return False
 
-    def order_status(self, id_num):
-        sig = self.signature_gen()
-        data = {'key': self.api_key, 'signature': sig, 'nonce': self.nonce, 'id': id_num}
-        ord_status = requests.post(constants.BITSTAMP_API_ONE.format(command='order_status'), json=data)
-        return ord_status.json()
+    def cancel_order(self, order_id):  #
+        sig = self.get_signature()
+        data = {'key': self.api_key, 'signature': sig, 'nonce': self.nonce, 'id': order_id}
+        cancel_order = requests.post(constants.BITSTAMP_API_NM.format(command='cancel_order'), data=data).json()
 
-    def find_open_orders(self):
-        sig = self.signature_gen()
+        if 'id' in cancel_order:
+            return True
+
+        logging.info('failed to cancel order, {}'.format(cancel_order))
+        return False
+
+    def get_order_status(self, order_id):  #
+        sig = self.get_signature()
+        data = {'key': self.api_key, 'signature': sig, 'nonce': self.nonce, 'id': order_id}
+        order_status = requests.post(constants.BITSTAMP_API_ONE.format(command='order_status'), data=data).json()
+
+        if order_status['status'] == 'Finished':
+            return constants.ORDER_STATUS_FINISHED
+        elif order_status['status'] == 'Open':
+            return constants.ORDER_STATUS_OPEN
+        elif order_status['status'] == 'In Queue':
+            return constants.ORDER_STATUS_QUEUE
+        else:
+            logging.info('get order status failed, {}'.format(order_status))
+            return None
+
+    def get_open_orders(self):  #
+        sig = self.get_signature()
         data = {'key': self.api_key, 'signature': sig, 'nonce': self.nonce}
         open_orders = requests.post((constants.BITSTAMP_API_ENDPOINT.format(command='open_orders', market=self.market)),
-                                    json=data)
-        return open_orders.json()
+                                    data=data).json()
 
-    def find_past_transactions(self, num_trans):
-        sig = self.signature_gen()
+        return open_orders
+
+    def get_transactions(self, num_trans=100):  #
+        sig = self.get_signature()
         data = {'key': self.api_key, 'signature': sig, 'nonce': self.nonce, 'limit': num_trans}
-        past_trans = requests.post((constants.BITSTAMP_API_ENDPOINT(command='user_transactions', market=self.market)),
-                                   json=data)
+        past_trans = requests.post((constants.BITSTAMP_API_ENDPOINT.format(command='user_transactions', market=self.market)),
+                                   data=data).json()
+
         return past_trans
 
-    def buy_market(self, amount):
-        sig = self.signature_gen()
+    def market_buy(self, amount):
+        sig = self.get_signature()
         data = {'key': self.api_key, 'signature': sig, 'nonce': self.nonce, 'amount': amount}
         buy_market = requests.post((constants.BITSTAMP_API_ENDPOINT.format(command='buy/market', market=self.market)),
-                                   json=data)
-        self.order = buy_market.json()
+                                   data=data).json()
+        if 'id' in buy_market:
+            return buy_market['id']
 
-        return self.check_order()
+        logging.info('market buy failed, {}'.format(buy_market))
+        return None
 
-    def sell_market(self, amount):
-        sig = self.signature_gen()
+    def market_sell(self, amount):  #
+        sig = self.get_signature()
         data = {'key': self.api_key, 'signature': sig, 'nonce': self.nonce, 'amount': amount}
         sell_market = requests.post((constants.BITSTAMP_API_ENDPOINT.format(command='sell/market', market=self.market)),
-                                    json=data)
-        self.order = sell_market.json()
+                                    data=data).json()
+        if 'id' in sell_market:
+            return sell_market['id']
 
-        return self.check_order()
+        logging.info('market sell failed, {}'.format(sell_market))
+
+
+logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.INFO)
+market = 'btcusd'
+om = OrderManager(market)
+
+time.sleep(1)
+print om.get_order_status(3797712719)
+

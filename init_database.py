@@ -17,14 +17,14 @@ ticker_init = '''
 create_ticker_trigger = '''
     CREATE TRIGGER queue AFTER INSERT ON ticker BEGIN
     DELETE FROM ticker WHERE
-        date =(SELECT min(date) FROM ticker) 
+        date =(SELECT min(id) FROM ticker) 
         AND (SELECT count(*) FROM ticker) > 1000001; 
     END;'''
 
 create_order_trigger = '''
     CREATE TRIGGER queue2 AFTER INSERT ON order_book BEGIN
     DELETE FROM order_book WHERE
-        date =(SELECT min(date) FROM order_book)
+        date =(SELECT min(id) FROM order_book)
         AND (SELECT count(*) FROM order_book) > 1000001;
     END;'''
 

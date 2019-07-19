@@ -26,15 +26,17 @@ class MarketDataInterface:
 
     # Retrieving from Database
     def get_ticker_data(self, previous):
-
-        if previous is True:
-            return utils.sql_fetch(
-                'SELECT * FROM ticker WHERE pair="{pair}" ORDER BY id DESC LIMIT 2'.format(pair=self.market)
-            )[1]
-        else:
-            return utils.sql_fetch(
-                'SELECT * FROM ticker WHERE pair="{pair}" ORDER BY id DESC LIMIT 1'.format(pair=self.market)
-            )[0]
+        try:
+            if previous is True:
+                return utils.sql_fetch(
+                    'SELECT * FROM ticker WHERE pair="{pair}" ORDER BY id DESC LIMIT 2'.format(pair=self.market)
+                )[1]
+            else:
+                return utils.sql_fetch(
+                    'SELECT * FROM ticker WHERE pair="{pair}" ORDER BY id DESC LIMIT 1'.format(pair=self.market)
+                )[0]
+        except sqlite3.DatabaseError:
+            logging.info('getting ticker data failed')
 
     def get_all_ticker(self, num_amount):
         return utils.sql_fetch(
@@ -62,7 +64,8 @@ class MarketDataInterface:
             self.date = datetime.fromtimestamp(float(ticker['timestamp']))
 
             utils.sql_exec(
-                'INSERT INTO ticker (pair, date, value, volume, vwap) VALUES ("{pair}", "{date}", "{value}", "{volume}", "{vwap}")'
+                'INSERT INTO ticker (pair, date, value, volume, vwap) '
+                'VALUES ("{pair}", "{date}", "{value}", "{volume}", "{vwap}")'
                 .format(pair=self.market, date=self.date, value=self.value, volume=self.volume, vwap=self.vwap)
             )
             logging.info('ticker updated')
@@ -82,19 +85,18 @@ class MarketDataInterface:
                 order_book = self.get_order_book()
                 self.bids = order_book.get('bids', [])
                 self.asks = order_book.get('asks', [])
-
                 for bid in self.bids:
                     utils.sql_exec(
-                        'INSERT INTO order_book (type, pair, price, amount)'
-                        ' VALUES ("bid", "{pairs}", "{bid}", "{amount}")'
+                        'INSERT INTO order_book (id, type, pair, price, amount)'
+                        ' VALUES (NULL, "bid", "{pairs}", "{bid}", "{amount}");'
                         .format(pairs=self.market, bid=bid[0], amount=bid[1])
                     )
 
                 for ask in self.asks:
 
                     utils.sql_exec(
-                        'INSERT INTO order_book (type, pair, price, amount)'
-                        ' VALUES ("ask", "{pairs}", "{ask}", "{amount}")'
+                        'INSERT INTO order_book (id, type, pair, price, amount)'
+                        ' VALUES (NULL, "ask", "{pairs}", "{ask}", "{amount}")'
                         .format(pairs=self.market, ask=ask[0], amount=ask[1])
                     )
                 logging.info('order book updated')

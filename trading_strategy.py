@@ -1,6 +1,7 @@
 
 from market_data import MarketDataInterface
 
+
 class TradingStrategy:
     def __init__(self, pair):
         self.pair = pair
@@ -60,16 +61,21 @@ class TradingStrategy:
         return risk
 
     def get_final_strat(self):
-        risk_mv = self.dual_mv_avg_indicator(15, 5)
-        risk_stoc = self.stochastic_indicator(15)
+        risk_mv = self.dual_mv_avg_indicator(50, 10)
+        risk_stoc = self.stochastic_indicator(100)
 
-        percent_amount = risk_mv + risk_stoc
+        percent_amount = (risk_mv + risk_stoc)/2
 
-        if percent_amount > 0:
+        if percent_amount > 0.01:
             action = 'buy'
-        elif percent_amount < 0:
+        elif percent_amount < -0.01:
             action = 'sell'
         else:
             action = 'wait'
         return {'risk': abs(percent_amount), 'action': action}
 
+
+om = TradingStrategy('btcusd')
+print om.get_final_strat()
+print om.stochastic_indicator(100)
+print om.dual_mv_avg_indicator(50, 10)
