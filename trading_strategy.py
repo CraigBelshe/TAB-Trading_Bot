@@ -32,15 +32,15 @@ class TradingStrategy:
         long_mv_avg = self.calc_mv_avg(long_period)
         short_mv_avg = self.calc_mv_avg(short_period)
         if short_mv_avg > long_mv_avg:
-            mult = 1
+            multiplier = 1
         elif short_mv_avg < long_mv_avg:
-            mult = -1
+            multiplier = -1
         else:
-            mult = 0
+            multiplier = 0
         risk = abs(long_mv_avg - short_mv_avg) / 20000
         if risk > 0.1:
             risk = 0.1
-            risk = risk * mult
+            risk = risk * multiplier
         return risk
 
     def stochastic_indicator(self, period):
@@ -48,16 +48,16 @@ class TradingStrategy:
 
         if stoc < 20:
             risk = abs(20 - stoc)/200
-            mult = 1
+            multiplier = 1
         elif stoc > 80:
             risk = (stoc - 80)/200
-            mult = -1
+            multiplier = -1
         else:
             risk = 0
-            mult = 0
+            multiplier = 0
         if risk > 0.1:
             risk = 0.1
-        risk = risk * mult
+        risk = risk * multiplier
         return risk
 
     def get_final_strat(self):

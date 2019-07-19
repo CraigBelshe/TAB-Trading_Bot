@@ -1,4 +1,4 @@
-DATABASE = 'tab_market_data.db'
+
 BITSTAMP_API_ENDPOINT = 'https://www.bitstamp.net/api/v2/{command}/{market}/'
 BITSTAMP_API_ONE = 'https://www.bitstamp.net/api/{command}/'
 BITSTAMP_API_NM = 'https://www.bitstamp.net/api/v2/{command}/'

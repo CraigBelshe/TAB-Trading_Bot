@@ -1,8 +1,8 @@
 import sqlite3
 
-import constants
+import settings
 
-connection = sqlite3.connect(constants.DATABASE)
+connection = sqlite3.connect(settings.DATABASE)
 cursor = connection.cursor()
 
 ticker_init = '''
