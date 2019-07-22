@@ -1,15 +1,17 @@
 from market_data import MarketDataInterface
 
+
 class TradingStrategy:
     def __init__(self, pair):
-        self.pair = pair
+        pass
 
     def calc_mv_avg(self, period):
+        pass
 
     def get_actions(self, prev_ticker, current_ticker):
-        return actions
+        pass
 
     def get_risk(self, prev_ticker, current_ticker):
-        return percent_amount
+        pass
 
 
