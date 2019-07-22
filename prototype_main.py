@@ -14,14 +14,15 @@ logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.WARNING)
 def main():
 
     try:
-        pair = sys.argv[1]
+        market = sys.argv[1]
     except IndexError:
-        pair = str(raw_input("Please specify which currency pair to use."))
+        market = str(raw_input("Please specify which currency pair to use."))
+
 
     running = True
 
-    md = MarketDataInterface(pair)
-    ts = TradingStrategy(pair)
+    md = MarketDataInterface(market)
+    ts = TradingStrategy(market)
     om = OrderManager()
 
     while running:
@@ -33,16 +34,18 @@ def main():
 
         for action in actions:
             if action == "buy":
-                result, order_details = om.buy(pair=pair, risk=risk, price=price)
+                result, order_details = om.buy(pair=market, risk=risk, price=price)
                 if result:
-                    logging.info('Successfully bought {0} at ${1}'.format(order_details['actual_amount'], order_details['actual_end_price']))
+                    logging.info('Successfully bought {0}{1} at {2}{3}'
+                                 .format(order_details['actual_amount'], market[:3], order_details['actual_end_price'], market[-3:]))
                 else:
                     logging.info('Buy failed')
 
             elif action == "sell":
-                result, order_details = om.sell(pair=pair, risk=risk, price=price)
+                result, order_details = om.sell(pair=market, risk=risk, price=price)
                 if result:
-                    logging.info('Successfully sold {0} at ${1}'.format(order_details['actual_amount'], order_details['actual_end_price']))
+                    logging.info('Successfully sold {0}{1} at {2}{3}'
+                                 .format(order_details['actual_amount'], market[:3], order_details['actual_end_price'], market[-3:]))
                 else:
                     logging.info('Sell failed')
 
