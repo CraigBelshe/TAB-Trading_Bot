@@ -1,5 +1,5 @@
-
 from market_data import MarketDataInterface
+
 
 class TradingStrategy:
     def __init__(self, pair):
@@ -28,78 +28,44 @@ class TradingStrategy:
         return (c - low) / (hi - low) * 100
 
     def dual_mv_avg_indicator(self, long_period, short_period):
-        self.long_mv_avg = self.calc_mv_avg(long_period)
-        self.short_mv_avg = self.calc_mv_avg(short_period)
-        if self.short_mv_avg > self.long_mv_avg:
-            actions = 'buy'
-        elif self.short_mv_avg < self.long_mv_avg:
-            actions = 'sell'
+        long_mv_avg = self.calc_mv_avg(long_period)
+        short_mv_avg = self.calc_mv_avg(short_period)
+        if short_mv_avg > long_mv_avg:
+            multiplier = 1
+        elif short_mv_avg < long_mv_avg:
+            multiplier = -1
         else:
-            actions = 'wait'
-        return actions
-
-    def single_mv_avg_indicator(self, period):
-        data = self.md.get_ticker_data(False)
-        price = data[3]
-        mv_avg = self.calc_mv_avg(period)
-        if price > mv_avg:
-            action = 'buy'
-        elif price < mv_avg:
-            action = 'sell'
-        else:
-            action = 'wait'
-        return action
+            multiplier = 0
+        risk = abs(long_mv_avg - short_mv_avg) / 20000
+        if risk > 0.1:
+            risk = 0.1
+        risk = risk * multiplier
+        return risk
 
     def stochastic_indicator(self, period):
-        self.stoc = self.calc_stochastic(period)
-        if self.stoc < 20:
-            action = 'buy'
-        elif self.stoc > 80:
-            action = 'sell'
-        else:
-            action = 'wait'
-        return action
+        stoc = self.calc_stochastic(period)
 
-    def dual_mv_avg_risk(self):
-        risk = abs(self.long_mv_avg - self.short_mv_avg)/20000
-        if risk > 0.1:
-            risk = 0.1
-        return risk
-
-    def stochastic_risk(self):
-        if self.stoc < 20:
-            risk = abs(20 - self.stoc)/200
-        elif self.stoc > 80:
-            risk = (self.stoc - 80)/200
+        if stoc < 20:
+            risk = abs(20 - stoc)/200
+            multiplier = 1
+        elif stoc > 80:
+            risk = (stoc - 80)/200
+            multiplier = -1
         else:
             risk = 0
+            multiplier = 0
         if risk > 0.1:
             risk = 0.1
+        risk = risk * multiplier
         return risk
 
-    def get_final_action(self):
-        actions = self.dual_mv_avg_indicator(15, 5)
-        # actions = self.stochastic_indicator(15)
-        return actions
+    def get_final_strat(self):
+        percent_risk = self.dual_mv_avg_indicator(50, 10)
 
-    def get_final_risk(self):
-        action_mv = self.dual_mv_avg_indicator(15, 5)
-        action_stoc = self.stochastic_indicator(15)
-        percent_amount_mv = self.dual_mv_avg_risk()
-        percent_amount_stoc = self.stochastic_risk()
-
-        if action_mv == 'sell':
-            percent_amount_mv = -1*percent_amount_mv
-        if action_stoc == 'sell':
-            percent_amount_stoc = -1*percent_amount_stoc
-
-        percent_amount = percent_amount_stoc + percent_amount_mv
-
-        if percent_amount > 0:
+        if percent_risk > 0.01:
             action = 'buy'
-        elif percent_amount < 0:
+        elif percent_risk < -0.01:
             action = 'sell'
         else:
             action = 'wait'
-        return {'risk': abs(percent_amount), 'action': action}
-
+        return {'risk': abs(percent_risk), 'action': action}
