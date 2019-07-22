@@ -27,7 +27,7 @@ class MarketDataInterface:
     # Retrieving from Database
     def get_ticker_data(self, previous):
         try:
-            if previous is True:
+            if previous:
                 return utils.sql_fetch(
                     'SELECT * FROM ticker WHERE pair="{pair}" ORDER BY id DESC LIMIT 2'.format(pair=self.market)
                 )[1]
@@ -35,7 +35,7 @@ class MarketDataInterface:
                 return utils.sql_fetch(
                     'SELECT * FROM ticker WHERE pair="{pair}" ORDER BY id DESC LIMIT 1'.format(pair=self.market)
                 )[0]
-        except sqlite3.DatabaseError:
+        except sqlite3.Error:
             logging.info('getting ticker data failed')
 
     def get_all_ticker(self, num_amount):
@@ -70,8 +70,8 @@ class MarketDataInterface:
             )
             logging.info('ticker updated')
 
-        except requests.exceptions.RequestException:
-            logging.warning('request for ticker failed')
+        except requests.exceptions.RequestException, sqlite3.Error:
+            logging.warning('update ticker failed')
 
     def get_order_book(self):
         return requests.get(constants.BITSTAMP_API_ENDPOINT.format(command='order_book', market=self.market)).json()
@@ -85,28 +85,31 @@ class MarketDataInterface:
                 order_book = self.get_order_book()
                 self.bids = order_book.get('bids', [])
                 self.asks = order_book.get('asks', [])
+
+                sql_bid = 'INSERT INTO order_book (id, type, pair, price, amount) VALUES'
                 for bid in self.bids:
-                    utils.sql_exec(
-                        'INSERT INTO order_book (id, type, pair, price, amount)'
-                        ' VALUES (NULL, "bid", "{pairs}", "{bid}", "{amount}");'
-                        .format(pairs=self.market, bid=bid[0], amount=bid[1])
-                    )
+                    sql_bid = '{sql_bid} (NULL, "bid", "{pair}", "{bid}", "{amount}"),'\
+                        .format(sql_bid=sql_bid, pair=self.market, bid=bid[0], amount=bid[1])
 
+                sql_bid = '{};'.format(sql_bid[:-1])
+                utils.sql_exec(sql_bid)
+
+                sql_ask = 'INSERT INTO order_book (id, type, pair, price, amount) VALUES'
                 for ask in self.asks:
+                    sql_ask = '{sql_ask} (NULL, "ask", "{pair}", "{ask}", "{amount}"),'\
+                        .format(sql_ask=sql_ask, pair=self.market, ask=ask[0], amount=ask[1])
 
-                    utils.sql_exec(
-                        'INSERT INTO order_book (id, type, pair, price, amount)'
-                        ' VALUES (NULL, "ask", "{pairs}", "{ask}", "{amount}")'
-                        .format(pairs=self.market, ask=ask[0], amount=ask[1])
-                    )
+                sql_ask = '{};'.format(sql_ask[:-1])
+                utils.sql_exec(sql_ask)
+
                 logging.info('order book updated')
                 self.order_cnt = 0
 
             else:
                 self.order_cnt += 1
                 
-        except requests.exceptions.RequestException:
-            logging.warning('request for order book failed')
+        except requests.exceptions.RequestException, sqlite3.Error:
+            logging.warning('update order book failed')
 
 # Getting from exchange
     def get_transactions(self):
