@@ -13,13 +13,13 @@ class OrderManager:
         pass
 
     def signature_gen(self):
-        return signature
+        pass
 
     def get_balance(self, currency):
         pass
 
     def check_order(self):
-        return result, order_details
+        pass
 
     def buy(self, pair, price, risk):
         pass

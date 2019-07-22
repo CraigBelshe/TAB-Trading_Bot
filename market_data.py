@@ -31,12 +31,11 @@ class MarketDataInterface:
                 return utils.sql_fetch(
                     'SELECT * FROM ticker WHERE pair="{pair}" ORDER BY id DESC LIMIT 2'.format(pair=self.market)
                 )[1]
-            else:
-                return utils.sql_fetch(
-                    'SELECT * FROM ticker WHERE pair="{pair}" ORDER BY id DESC LIMIT 1'.format(pair=self.market)
-                )[0]
+            return utils.sql_fetch(
+                'SELECT * FROM ticker WHERE pair="{pair}" ORDER BY id DESC LIMIT 1'.format(pair=self.market)
+            )[0]
         except sqlite3.Error:
-            logging.info('getting ticker data failed')
+            logging.exception('getting ticker data failed')
 
     def get_all_ticker(self, num_amount):
         return utils.sql_fetch(
@@ -71,7 +70,7 @@ class MarketDataInterface:
             logging.info('ticker updated')
 
         except requests.exceptions.RequestException, sqlite3.Error:
-            logging.warning('update ticker failed')
+            logging.exception('update ticker failed')
 
     def get_order_book(self):
         return requests.get(constants.BITSTAMP_API_ENDPOINT.format(command='order_book', market=self.market)).json()
@@ -85,6 +84,12 @@ class MarketDataInterface:
                 order_book = self.get_order_book()
                 self.bids = order_book.get('bids', [])
                 self.asks = order_book.get('asks', [])
+
+                if not self.bids:
+                    logging.warning('order book not updating, no bids found')
+                    return
+                if not self.asks:
+                    logging.warning('order book not updating, no asks found')
 
                 sql_bid = 'INSERT INTO order_book (id, type, pair, price, amount) VALUES'
                 for bid in self.bids:
@@ -109,7 +114,7 @@ class MarketDataInterface:
                 self.order_cnt += 1
                 
         except requests.exceptions.RequestException, sqlite3.Error:
-            logging.warning('update order book failed')
+            logging.exception('update order book failed')
 
 # Getting from exchange
     def get_transactions(self):
@@ -117,8 +122,7 @@ class MarketDataInterface:
         return transactions.json()
 
     def get_eur_usd(self):
-        eur_usd = requests.get(constants.BITSTAMP_EUR_USD)
-        convert = eur_usd.json()
+        convert = requests.get(constants.BITSTAMP_EUR_USD).json()
         self.buy_eur = convert['buy']
         self.sell_eur = convert['sell']
 
