@@ -1,8 +1,5 @@
-utils.pyc
 venv/
-.pyc
-
+*.pyc
 .idea
 settings.py
 tab_market_data.db
-constants.pyc
