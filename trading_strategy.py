@@ -73,9 +73,3 @@ class TradingStrategy:
         else:
             action = 'wait'
         return {'risk': abs(percent_amount), 'action': action}
-
-
-om = TradingStrategy('btcusd')
-print om.get_final_strat()
-print om.stochastic_indicator(100)
-print om.dual_mv_avg_indicator(50, 10)

@@ -16,7 +16,7 @@ def main():
     try:
         pair = sys.argv[1]
     except IndexError:
-        pair = str(raw_input("Please specify which currency pair to use."))
+        pair = str(input("Please specify which currency pair to use."))
 
     running = True
 
@@ -30,7 +30,7 @@ def main():
         price = current_ticker['value']
 
         if action['action'] == "buy":
-            result = om.buy(risk=action['risk'], price=price)
+            result = om.buy(amount=action['risk'], price=price)
             if result[0]:
                 logging.info('Successfully bought {0} at ${1}'.format(result[2], result[1]))
                 result = True
@@ -39,7 +39,7 @@ def main():
                 result = False
 
         elif action['action'] == 'sell':
-            result = om.sell(risk=action['risk'], price=price)
+            result = om.sell(amount=action['risk'], price=price)
             if result[0]:
                 logging.info('Successfully sold {0} at ${1}'.format(result[2], result[1]))
                 result = True
@@ -58,7 +58,7 @@ def main():
 
         time.sleep(settings.MAIN_TIMER)
         if not result:
-            print 'order error'
+            print('order error')
 
 
 if __name__ == '__main__':

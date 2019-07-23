@@ -13,14 +13,17 @@ class OrderManager:
     def __init__(self, market):
         self.customer_id = settings.CUSTOMER_ID
         self.api_key = settings.API_KEY
-        self.api_secret = settings.API_SECRET
+        self.api_secret = bytes(settings.API_SECRET, encoding='utf8')
         self.nonce = time.time()
         self.order = {}
         self.market = market
 
     def get_signature(self):  #
+
         self.nonce = str(int(time.time()))
-        message = self.nonce + self.customer_id + self.api_key
+        print(self.nonce)
+        message = bytes(self.nonce + self.customer_id + self.api_key, encoding='utf8')
+        print(self.nonce, self.customer_id, self.api_key)
         signature = hmac.new(
             self.api_secret,
             msg=message,
@@ -57,7 +60,7 @@ class OrderManager:
         data.update({'amount': amount, 'price': price})
         sell_limit_order = requests.post((constants.BITSTAMP_API_ENDPOINT.format(command='sell', market=self.market)),
                                          data=data).json()
-        print sell_limit_order
+
         if 'id' in sell_limit_order:
             return sell_limit_order['id']
 
@@ -157,9 +160,6 @@ class OrderManager:
 
 
 logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.INFO)
-market = 'btcusd'
-om = OrderManager(market)
 
-time.sleep(1)
-print om.get_order_status(3797712719)
-
+om = OrderManager('btcusd')
+print(om.get_signature())
