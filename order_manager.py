@@ -21,9 +21,7 @@ class OrderManager:
     def get_signature(self):  #
 
         self.nonce = str(int(time.time()))
-        print(self.nonce)
         message = bytes(self.nonce + self.customer_id + self.api_key, encoding='utf8')
-        print(self.nonce, self.customer_id, self.api_key)
         signature = hmac.new(
             self.api_secret,
             msg=message,
@@ -161,5 +159,5 @@ class OrderManager:
 
 logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.INFO)
 
-om = OrderManager('btcusd')
-print(om.get_signature())
+#om = OrderManager('btcusd')
+#print(om.get_signature())
