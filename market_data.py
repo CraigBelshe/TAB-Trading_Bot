@@ -35,7 +35,7 @@ class MarketDataInterface:
                 'SELECT * FROM ticker WHERE pair="{pair}" ORDER BY id DESC LIMIT 1'.format(pair=self.market)
             )[0]
         except sqlite3.Error:
-            logging.exception('failed to get last ticker from db')
+            logging.exception('failed to get most recent ticker from db')
 
     def get_all_ticker(self, limit):
         try:

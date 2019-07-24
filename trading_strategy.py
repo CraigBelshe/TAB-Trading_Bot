@@ -11,24 +11,19 @@ class TradingStrategy:
 
     def calc_mv_avg(self, period):
         data = self.md.get_all_ticker(period)
-        sums = 0
-        div = 0
-        for ticker in data:
-            sums += Decimal(ticker[3])
-            div += 1
+        sums = Decimal(sum([x[3] for x in data]))
+        div = len(data)
         return Decimal(sums/div)
 
     def calc_stochastic(self, period):
-        prices = []
         data = self.md.get_all_ticker(period)
-        for tick in data:
-            prices.append(Decimal(tick[3]))
+
+        prices = ([Decimal(x[3]) for x in data])
         hi = max(prices)
         low = min(prices)
-        last_ticker_value = self.md.get_ticker_data(False)
-        c = Decimal(last_ticker_value[3])
+        last_ticker_value = Decimal((self.md.get_ticker_data(False))[3])
 
-        return (c - low) / (hi - low) * 100
+        return (last_ticker_value - low) / (hi - low) * 100
 
     def dual_mv_avg_indicator(self, long_period, short_period):
         long_mv_avg = self.calc_mv_avg(long_period)
