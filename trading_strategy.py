@@ -1,3 +1,6 @@
+from decimal import Decimal
+import logging
+
 from market_data import MarketDataInterface
 
 
@@ -11,19 +14,19 @@ class TradingStrategy:
         sums = 0
         div = 0
         for ticker in data:
-            sums += int(ticker[3])
+            sums += Decimal(ticker[3])
             div += 1
-        return float(sums/div)
+        return Decimal(sums/div)
 
     def calc_stochastic(self, period):
         prices = []
         data = self.md.get_all_ticker(period)
         for tick in data:
-            prices.append(int(tick[3]))
+            prices.append(Decimal(tick[3]))
         hi = max(prices)
         low = min(prices)
-        data = self.md.get_ticker_data(False)
-        c = data[3]
+        last_ticker_value = self.md.get_ticker_data(False)
+        c = Decimal(last_ticker_value[3])
 
         return (c - low) / (hi - low) * 100
 
@@ -36,27 +39,28 @@ class TradingStrategy:
             multiplier = -1
         else:
             multiplier = 0
-        risk = abs(long_mv_avg - short_mv_avg) / 20000
+        risk = Decimal(abs(long_mv_avg - short_mv_avg) / 20000)
         if risk > 0.1:
             risk = 0.1
         risk = risk * multiplier
+        logging.info('ts: calculated dual mv avg, risk is {}'.format(risk))
         return risk
 
     def stochastic_indicator(self, period):
         stoc = self.calc_stochastic(period)
-
         if stoc < 20:
-            risk = abs(20 - stoc)/200
+            risk = Decimal((20 - stoc)/200)
             multiplier = 1
         elif stoc > 80:
-            risk = (stoc - 80)/200
+            risk = Decimal((stoc - 80)/200)
             multiplier = -1
         else:
-            risk = 0
+            risk = Decimal(0)
             multiplier = 0
         if risk > 0.1:
             risk = 0.1
         risk = risk * multiplier
+        logging.info('ts: calculated stochastic, risk is {}'.format(risk))
         return risk
 
     def get_final_strat(self):
@@ -68,4 +72,5 @@ class TradingStrategy:
             action = 'sell'
         else:
             action = 'wait'
+        logging.info('ts: final strategy. risk is {}'.format(percent_risk))
         return {'risk': abs(percent_risk), 'action': action}

@@ -35,23 +35,32 @@ class MarketDataInterface:
                 'SELECT * FROM ticker WHERE pair="{pair}" ORDER BY id DESC LIMIT 1'.format(pair=self.market)
             )[0]
         except sqlite3.Error:
-            logging.exception('getting ticker data failed')
+            logging.exception('failed to get last ticker from db')
 
-    def get_all_ticker(self, num_amount):
-        return utils.sql_fetch(
-            'SELECT * FROM ticker WHERE pair ="{pair}" ORDER BY id DESC LIMIT {amount}'
-            .format(pair=self.market, amount=num_amount)
-        )
+    def get_all_ticker(self, limit):
+        try:
+            return utils.sql_fetch(
+                'SELECT * FROM ticker WHERE pair ="{pair}" ORDER BY id DESC LIMIT {amount}'
+                .format(pair=self.market, amount=limit)
+            )
+        except sqlite3.Error:
+            logging.exception('failed to get ticker from db')
 
     def get_order_book_asks(self):
-        return utils.sql_fetch(
-            'SELECT * FROM ticker WHERE (type="ask" AND pair="{pair}")'.format(pair=self.market)
-        )
+        try:
+            return utils.sql_fetch(
+                'SELECT * FROM ticker WHERE (type="ask" AND pair="{pair}")'.format(pair=self.market)
+            )
+        except sqlite3.Error:
+            logging.exception('failed to get order book asks from db')
 
     def get_order_book_bids(self):
-        return utils.sql_fetch(
-            'SELECT * FROM ticker WHERE (type="bid" AND pair="{pair}")'.format(pair=self.market)
-        )
+        try:
+            return utils.sql_fetch(
+                'SELECT * FROM ticker WHERE (type="bid" AND pair="{pair}")'.format(pair=self.market)
+            )
+        except sqlite3.Error:
+            logging.exception('failed to get order book bids from db')
 
     # Updating Database
     def update_ticker(self):
@@ -69,14 +78,20 @@ class MarketDataInterface:
             )
             logging.info('ticker updated')
 
-        except requests.exceptions.RequestException, sqlite3.Error:
+        except (requests.exceptions.RequestException, sqlite3.Error):
             logging.exception('update ticker failed')
 
     def get_order_book(self):
-        return requests.get(constants.BITSTAMP_API_ENDPOINT.format(command='order_book', market=self.market)).json()
+        try:
+            return requests.get(constants.BITSTAMP_API_ENDPOINT.format(command='order_book', market=self.market)).json()
+        except requests.exceptions.RequestException:
+            logging.exception('failed to get order book from exchange')
 
     def get_ticker(self):
-        return requests.get(constants.BITSTAMP_API_ENDPOINT.format(command='ticker', market=self.market)).json()
+        try:
+            return requests.get(constants.BITSTAMP_API_ENDPOINT.format(command='ticker', market=self.market)).json()
+        except requests.exceptions.RequestException:
+            logging.exception('failed to get ticker from exchange')
 
     def update_order_book(self):
         try:
@@ -113,18 +128,24 @@ class MarketDataInterface:
             else:
                 self.order_cnt += 1
                 
-        except requests.exceptions.RequestException, sqlite3.Error:
+        except (requests.exceptions.RequestException, sqlite3.Error):
             logging.exception('update order book failed')
 
 # Getting from exchange
     def get_transactions(self):
-        transactions = requests.get(constants.BITSTAMP_API_TRANS + self.market)
-        return transactions.json()
+        try:
+            transactions = requests.get(constants.BITSTAMP_API_TRANS + self.market)
+            return transactions.json()
+        except requests.exceptions.RequestException:
+            logging.exception('failed to get transactions from exchange')
 
     def get_eur_usd(self):
-        convert = requests.get(constants.BITSTAMP_EUR_USD).json()
-        self.buy_eur = convert['buy']
-        self.sell_eur = convert['sell']
+        try:
+            convert = requests.get(constants.BITSTAMP_EUR_USD).json()
+            self.buy_eur = convert['buy']
+            self.sell_eur = convert['sell']
+        except requests.exceptions.RequestException:
+            logging.exception('failed to get eur_usd rate from exchange')
 
 
 def main(market):
