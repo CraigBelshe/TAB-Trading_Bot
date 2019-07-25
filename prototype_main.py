@@ -5,6 +5,7 @@ import sys
 from market_data import MarketDataInterface
 from trading_strategy import TradingStrategy
 from order_manager import OrderManager
+import settings
 
 
 logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.WARNING)
@@ -59,7 +60,7 @@ def main():
 
             return running, result
 
-        time.sleep(settings.timer)
+        time.sleep(settings.MAIN_TIMER)
 
 
 if __name__ == '__main__':
