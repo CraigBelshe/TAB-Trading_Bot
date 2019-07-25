@@ -8,6 +8,8 @@ import requests
 import settings
 import constants
 
+logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.INFO)
+
 
 class OrderManager:
     def __init__(self, market):
@@ -30,8 +32,10 @@ class OrderManager:
 
     def get_balance(self):  #
         data = self.get_signature()
+        print(data)
         account = requests.post((constants.BITSTAMP_API_ENDPOINT.format(command='balance', market=self.market)),
                                 data=data).json()
+        print(account)
         currency = self.market[:-3]
         balance = account.get('{currency}_balance'.format(currency=currency))
         available = account.get('{currency}_available'.format(currency=currency))
@@ -155,9 +159,3 @@ class OrderManager:
             return sell_market['id']
 
         logging.info('market sell failed, {}'.format(sell_market))
-
-
-logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.INFO)
-
-#om = OrderManager('btcusd')
-#print(om.get_signature())
