@@ -39,6 +39,7 @@ class TradingStrategy:
             risk = 0.1
         risk = risk * multiplier
         logging.info('ts: calculated dual mv avg, risk is {}'.format(risk))
+
         return risk
 
     def stochastic_indicator(self, period):
@@ -69,3 +70,4 @@ class TradingStrategy:
             action = 'wait'
         logging.info('ts: final strategy. risk is {}'.format(percent_risk))
         return {'risk': abs(percent_risk), 'action': action}
+
