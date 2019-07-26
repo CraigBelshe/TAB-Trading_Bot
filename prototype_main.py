@@ -6,6 +6,7 @@ from market_data import MarketDataInterface
 from trading_strategy import TradingStrategy
 from order_manager import OrderManager
 import settings
+import constants
 
 
 logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.WARNING)
@@ -15,8 +16,14 @@ def main():
 
     try:
         market = sys.argv[1]
+        if market not in constants.MARKETS:
+            raise IndexError
+
     except IndexError:
-        market = str(input("Please specify which currency pair to use."))
+        while True:
+            market = str(input("Please specify which currency pair to use (btcusd, ltcusd, etc)."))
+            if market in constants.MARKETS:
+                break
 
     running = True
 
@@ -25,7 +32,7 @@ def main():
     om = OrderManager(market)
 
     while running:
-        action = ts.get_final_strat()
+        action = ts.get_final_strategy()
         price = (md.get_ticker_data(False))['value']
         order_details = om.get_order_status(id)
 

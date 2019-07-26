@@ -59,7 +59,7 @@ class TradingStrategy:
         logging.info('ts: calculated stochastic, risk is {}'.format(risk))
         return risk
 
-    def get_final_strat(self):
+    def get_final_strategy(self):
         percent_risk = self.dual_mv_avg_indicator(50, 10)
 
         if percent_risk > 0.01:

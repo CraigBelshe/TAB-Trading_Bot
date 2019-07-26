@@ -83,13 +83,13 @@ class MarketDataInterface:
 
     def get_order_book(self):
         try:
-            return requests.get(constants.BITSTAMP_API_ENDPOINT.format(command='order_book', market=self.market)).json()
+            return requests.get(constants.BitstampAPI.endpoint.value.format(command='order_book', market=self.market)).json()
         except requests.exceptions.RequestException:
             logging.exception('failed to get order book from exchange')
 
     def get_ticker(self):
         try:
-            return requests.get(constants.BITSTAMP_API_ENDPOINT.format(command='ticker', market=self.market)).json()
+            return requests.get(constants.BitstampAPI.endpoint.value.format(command='ticker', market=self.market)).json()
         except requests.exceptions.RequestException:
             logging.exception('failed to get ticker from exchange')
 
@@ -134,14 +134,14 @@ class MarketDataInterface:
 # Getting from exchange
     def get_transactions(self):
         try:
-            transactions = requests.get(constants.BITSTAMP_API_TRANS + self.market)
+            transactions = requests.get(constants.BitstampAPI.transactions.value.format(market=self.market))
             return transactions.json()
         except requests.exceptions.RequestException:
             logging.exception('failed to get transactions from exchange')
 
     def get_eur_usd(self):
         try:
-            convert = requests.get(constants.BITSTAMP_EUR_USD).json()
+            convert = requests.get(constants.BitstampAPI.eur_usd.value).json()
             self.buy_eur = convert['buy']
             self.sell_eur = convert['sell']
         except requests.exceptions.RequestException:
