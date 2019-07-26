@@ -1,5 +1,16 @@
-DATABASE = 'tab_market_data.db'
-BITSTAMP_API_ENDPOINT = 'https://www.bitstamp.net/api/v2/{command}/{market}/'
+from enum import Enum
 
-BITSTAMP_API_TRANS = 'https://www.bitstamp.net/api/v2/transactions/'
-BITSTAMP_EUR_USD = 'https://www.bitstamp.net/api/eur_usd/'
+ORDER_STATUS_FINISHED = 'finished'
+ORDER_STATUS_OPEN = 'open'
+ORDER_STATUS_QUEUE = 'queue'
+MARKETS = ['btcusd', 'btceur', 'eurusd', 'xrpusd', 'xrpeur',
+           'xrpbtc', 'ltcusd', 'ltceur', 'ltcbtc', 'ethusd',
+           'etheur', 'ethbtc', 'bchusd', 'bcheur', 'bchbtc']
+
+
+class BitstampAPI(Enum):
+    endpoint = 'https://www.bitstamp.net/api/v2/{command}/{market}/'
+    one = 'https://www.bitstamp.net/api/{command}/'
+    no_market = 'https://www.bitstamp.net/api/v2/{command}/'
+    transactions = 'https://www.bitstamp.net/api/v2/transactions/{market}'
+    eur_usd = 'https://www.bitstamp.net/api/eur_usd/'

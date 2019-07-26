@@ -39,15 +39,16 @@ class TradingStrategy:
             risk = 0.1
         risk = risk * multiplier
         logging.info('ts: calculated dual mv avg, risk is {}'.format(risk))
+
         return risk
 
     def stochastic_indicator(self, period):
-        stoc = self.calc_stochastic(period)
-        if stoc < 20:
-            risk = Decimal((20 - stoc)/200)
+        stochastic = self.calc_stochastic(period)
+        if stochastic < 20:
+            risk = Decimal((20 - stochastic)/200)
             multiplier = 1
-        elif stoc > 80:
-            risk = Decimal((stoc - 80)/200)
+        elif stochastic > 80:
+            risk = Decimal((stochastic - 80)/200)
             multiplier = -1
         else:
             risk = Decimal(0)
@@ -58,7 +59,7 @@ class TradingStrategy:
         logging.info('ts: calculated stochastic, risk is {}'.format(risk))
         return risk
 
-    def get_final_strat(self):
+    def get_final_strategy(self):
         percent_risk = self.dual_mv_avg_indicator(50, 10)
 
         if percent_risk > 0.01:
