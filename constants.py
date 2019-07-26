@@ -14,5 +14,3 @@ class BitstampAPI(Enum):
     no_market = 'https://www.bitstamp.net/api/v2/{command}/'
     transactions = 'https://www.bitstamp.net/api/v2/transactions/{market}'
     eur_usd = 'https://www.bitstamp.net/api/eur_usd/'
-
-

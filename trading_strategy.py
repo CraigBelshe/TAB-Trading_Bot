@@ -43,12 +43,12 @@ class TradingStrategy:
         return risk
 
     def stochastic_indicator(self, period):
-        stoc = self.calc_stochastic(period)
-        if stoc < 20:
-            risk = Decimal((20 - stoc)/200)
+        stochastic = self.calc_stochastic(period)
+        if stochastic < 20:
+            risk = Decimal((20 - stochastic)/200)
             multiplier = 1
-        elif stoc > 80:
-            risk = Decimal((stoc - 80)/200)
+        elif stochastic > 80:
+            risk = Decimal((stochastic - 80)/200)
             multiplier = -1
         else:
             risk = Decimal(0)
@@ -70,4 +70,3 @@ class TradingStrategy:
             action = 'wait'
         logging.info('ts: final strategy. risk is {}'.format(percent_risk))
         return {'risk': abs(percent_risk), 'action': action}
-
