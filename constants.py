@@ -7,3 +7,7 @@ BITSTAMP_EUR_USD = 'https://www.bitstamp.net/api/eur_usd/'
 ORDER_STATUS_FINISHED = 'finished'
 ORDER_STATUS_OPEN = 'open'
 ORDER_STATUS_QUEUE = 'queue'
+
+MARKETS = ['btcusd', 'btceur', 'eurusd', 'xrpusd', 'xrpeur',
+           'xrpbtc', 'ltcusd', 'ltceur', 'ltcbtc', 'ethusd',
+           'etheur', 'ethbtc', 'bchusd', 'bcheur', 'bchbtc']
