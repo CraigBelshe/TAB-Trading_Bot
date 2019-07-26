@@ -16,10 +16,10 @@ def main():
 
     try:
         market = sys.argv[1]
-        if market not in constants.MARKETS:
-            raise IndexError
-
     except IndexError:
+        market = 'not a currency pair'
+
+    if market not in constants.MARKETS:
         while True:
             market = str(input("Please specify which currency pair to use (btcusd, ltcusd, etc)."))
             if market in constants.MARKETS:
