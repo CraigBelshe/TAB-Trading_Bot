@@ -2,6 +2,7 @@ from time import sleep
 from decimal import Decimal
 import sys
 import logging
+import argparse
 
 from trading_strategy import TradingStrategy
 from order_manager import OrderManager
@@ -14,17 +15,9 @@ logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.DEBUG)
 
 def main():
 
-    try:
-        market = sys.argv[1]
-        if market not in constants.MARKETS:
-            raise IndexError
-
-    except IndexError:
-        logging.info('need a market (btcusd, ltcusd, etc.)')
-        while True:
-            market = str(input("Please specify which currency pair to use (btcusd, ltcusd, etc):"))
-            if market in constants.MARKETS:
-                break
+    parser = argparse.ArgumentParser()
+    parser.add_argument('market', type=str, choices=constants.MARKETS, help='currency pair - btcusd, ltcusd, etc')
+    market = (parser.parse_args()).market
 
     logging.info('the market {} was chosen'.format(market))
 
@@ -38,28 +31,35 @@ def main():
         action = ts.get_final_strategy()
         price = Decimal(str((md.get_ticker_data(False))[3]))
         balance = om.get_balance()
-        print(balance, action)
 
         if action['action'] == 'buy':
-            amount = Decimal(str(action['risk'] * balance['usd_available'] / price))
+            amount = action['risk'] * (Decimal(str(balance['usd_available'])) / Decimal(str(price)))
         elif action['action'] == 'sell':
             amount = action['risk'] * Decimal(str(balance['available']))
         else:
             amount = Decimal('0')
 
-        if market[-3:] in ['usd', 'eur']:
-            if (amount * price) < constants.EUR_USD_MIN:
-                action['action'] = 'wait'
-                amount = Decimal('0')
-                logging.info('do not have minimum amount ({}) to trade'.format(constants.EUR_USD_MIN))
-        elif market[-3:] == 'btc':
-            if (amount * price) < constants.BTC_MIN:
-                action['action'] = 'wait'
-                amount = Decimal('0')
-                logging.info('do not have minimum amount ({}) to trade'.format(constants.BTC_MIN))
+        if action['action'] in ['buy', 'sell']:
+            if market[-3:] in ['usd', 'eur']:
+                if (amount * price) < constants.EUR_USD_MIN_TRANSACTION_SIZE:
+                    action['action'] = 'wait'
+                    amount = Decimal('0')
+                    logging.info('do not have minimum amount ({}) to trade'
+                                 .format(constants.EUR_USD_MIN_TRANSACTION_SIZE))
+                price = price.quantize(Decimal('.01'))
 
-        amount = amount.quantize(Decimal('0.00000001'))
-        price = price.quantize(Decimal('0.01'))
+                if market[:3] in ['xrp', 'usd', 'eur']:
+                    amount = amount.quantize(Decimal('.00001'))
+                else:
+                    amount = amount.quantize(Decimal('.00000001'))
+
+            elif market[-3:] == 'btc':
+                if (amount * price) < constants.BTC_MIN_TRANSACTION_SIZE:
+                    action['action'] = 'wait'
+                    amount = Decimal('0')
+                    logging.info('do not have minimum amount ({}) to trade'
+                                 .format(constants.BTC_MIN_TRANSACTION_SIZE))
+                price = price.quantize(Decimal('.00000001'))
 
         if action['action'] == 'buy':
             sleep(1)

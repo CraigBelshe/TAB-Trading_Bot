@@ -19,7 +19,7 @@ class TradingStrategy:
             return Decimal(str(sums/div))
         except InvalidOperation:
             logging.exception('could not calculate moving average, is there data in the database?')
-            return 0
+            return None
 
     def calc_stochastic(self, period):
         data = self.md.get_all_ticker(period)
@@ -34,19 +34,24 @@ class TradingStrategy:
     def dual_mv_avg_indicator(self, long_period, short_period):
         long_mv_avg = self.calc_mv_avg(long_period)
         short_mv_avg = self.calc_mv_avg(short_period)
-        if short_mv_avg > long_mv_avg:
-            multiplier = 1
-        elif short_mv_avg < long_mv_avg:
-            multiplier = -1
-        else:
-            multiplier = 0
-        risk = Decimal(str(abs(long_mv_avg - short_mv_avg) / 2000))
-        if risk > settings.MAX_RISK:
-            risk = settings.MAX_RISK
-        risk = risk * multiplier
-        logging.info('ts: calculated dual mv avg, risk is {}'.format(risk))
+        try:
+            if short_mv_avg > long_mv_avg:
+                multiplier = 1
+            elif short_mv_avg < long_mv_avg:
+                multiplier = -1
+            else:
+                multiplier = 0
+            risk = Decimal(str(abs(long_mv_avg - short_mv_avg) / 2000))
+            if risk > settings.MAX_RISK:
+                risk = settings.MAX_RISK
+            risk = risk * multiplier
+            logging.info('ts: calculated dual mv avg, risk is {}'.format(risk))
 
-        return risk
+            return risk
+
+        except TypeError:
+            logging.exception('could not calculate risk for dual moving average')
+            return None
 
     def stochastic_indicator(self, period):
         stochastic = self.calc_stochastic(period)
@@ -67,12 +72,15 @@ class TradingStrategy:
 
     def get_final_strategy(self):
         percent_risk = self.dual_mv_avg_indicator(50, 10)
-
-        if percent_risk > 0.01:
-            action = 'buy'
-        elif percent_risk < -0.01:
-            action = 'sell'
-        else:
-            action = 'wait'
-        logging.info('ts: final strategy. risk is {}'.format(percent_risk))
-        return {'risk': abs(percent_risk), 'action': action}
+        try:
+            if percent_risk > 0.01:
+                action = 'buy'
+            elif percent_risk < -0.01:
+                action = 'sell'
+            else:
+                action = 'wait'
+            logging.info('ts: final strategy. risk is {}'.format(percent_risk))
+            return {'risk': abs(percent_risk), 'action': action}
+        except TypeError:
+            logging.exception('could not get final action in get_final_strategy')
+            return {'risk': percent_risk, 'action': 'wait'}
