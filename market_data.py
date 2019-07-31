@@ -34,8 +34,9 @@ class MarketDataInterface:
             return utils.sql_fetch(
                 'SELECT * FROM ticker WHERE pair="{pair}" ORDER BY id DESC LIMIT 1'.format(pair=self.market)
             )[0]
-        except sqlite3.Error:
+        except (sqlite3.Error, IndexError):
             logging.exception('failed to get most recent ticker from db')
+            return [0, 0, 0, 0, 0, 0]
 
     def get_all_ticker(self, limit):
         try:
@@ -161,3 +162,4 @@ if __name__ == "__main__":
     logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.ERROR)
     main(sys.argv[1])
     logging.info("md update loop stopped")
+

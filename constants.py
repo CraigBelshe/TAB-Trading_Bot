@@ -6,6 +6,8 @@ ORDER_STATUS_QUEUE = 'queue'
 MARKETS = ['btcusd', 'btceur', 'eurusd', 'xrpusd', 'xrpeur',
            'xrpbtc', 'ltcusd', 'ltceur', 'ltcbtc', 'ethusd',
            'etheur', 'ethbtc', 'bchusd', 'bcheur', 'bchbtc']
+EUR_USD_MIN_TRANSACTION_SIZE = .0000005
+BTC_MIN_TRANSACTION_SIZE = .001
 
 
 class BitstampAPI(Enum):
