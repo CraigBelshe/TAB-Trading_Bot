@@ -41,7 +41,7 @@ def main():
         print(balance, action)
 
         if action['action'] == 'buy':
-            amount = Decimal(str(action['risk'] * balance['usd_available'] / price))
+            amount = Decimal(str(action['risk'] * balance['second_available'] / price))
         elif action['action'] == 'sell':
             amount = action['risk'] * Decimal(str(balance['available']))
         else:

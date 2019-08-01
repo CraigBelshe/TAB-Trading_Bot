@@ -34,13 +34,14 @@ class TradingStrategy:
     def dual_mv_avg_indicator(self, long_period, short_period):
         long_mv_avg = self.calc_mv_avg(long_period)
         short_mv_avg = self.calc_mv_avg(short_period)
+        print(long_mv_avg, short_mv_avg)
         if short_mv_avg > long_mv_avg:
             multiplier = 1
         elif short_mv_avg < long_mv_avg:
             multiplier = -1
         else:
             multiplier = 0
-        risk = Decimal(str(abs(long_mv_avg - short_mv_avg) / 2000))
+        risk = Decimal(str(abs(long_mv_avg - short_mv_avg) / 500))
         if risk > settings.MAX_RISK:
             risk = settings.MAX_RISK
         risk = risk * multiplier
@@ -66,11 +67,11 @@ class TradingStrategy:
         return risk
 
     def get_final_strategy(self):
-        percent_risk = self.dual_mv_avg_indicator(50, 10)
+        percent_risk = self.dual_mv_avg_indicator(10, 5)
 
-        if percent_risk > 0.01:
+        if percent_risk > 0.001:
             action = 'buy'
-        elif percent_risk < -0.01:
+        elif percent_risk < -0.001:
             action = 'sell'
         else:
             action = 'wait'

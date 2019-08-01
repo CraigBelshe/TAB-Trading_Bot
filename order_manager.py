@@ -39,12 +39,13 @@ class OrderManager:
         account = requests.post((constants.BitstampAPI.endpoint.value
                                  .format(command='balance', market=self.market)), data=data).json()
         currency = self.market[:-3]
+        currency_two = self.market[:3]
         balance = account.get('{currency}_balance'.format(currency=currency))
         available = account.get('{currency}_available'.format(currency=currency))
         reserved = account.get('{currency}_reserved'.format(currency=currency))
-        usd_available = account.get('usd_available')
+        usd_available = account.get('{currency}_available'.format(currency_two))
         account_balance = {'balance': balance, 'available': available, 'reserved': reserved,
-                           'usd_available': usd_available}
+                           'second_available': usd_available}
         return account_balance
 
     def buy(self, price, amount):

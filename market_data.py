@@ -67,10 +67,10 @@ class MarketDataInterface:
     def update_ticker(self):
         try:
             ticker = self.get_ticker()
-            self.vwap = float(ticker['vwap'])
-            self.volume = float(ticker['volume'])
-            self.value = float(ticker['last'])
-            self.date = datetime.fromtimestamp(float(ticker['timestamp']))
+            self.vwap = float(ticker.get('vwap', []))
+            self.volume = float(ticker.get('volume', []))
+            self.value = float(ticker.get('last', []))
+            self.date = datetime.fromtimestamp(float(ticker.get('timestamp', [])))
 
             utils.sql_exec(
                 'INSERT INTO ticker (pair, date, value, volume, vwap) '
@@ -84,13 +84,15 @@ class MarketDataInterface:
 
     def get_order_book(self):
         try:
-            return requests.get(constants.BitstampAPI.endpoint.value.format(command='order_book', market=self.market)).json()
+            return requests.get(constants.BitstampAPI.endpoint.value.
+                                format(command='order_book', market=self.market)).json()
         except requests.exceptions.RequestException:
             logging.exception('failed to get order book from exchange')
 
     def get_ticker(self):
         try:
-            return requests.get(constants.BitstampAPI.endpoint.value.format(command='ticker', market=self.market)).json()
+            return requests.get(constants.BitstampAPI.endpoint.value.
+                                format(command='ticker', market=self.market)).json()
         except requests.exceptions.RequestException:
             logging.exception('failed to get ticker from exchange')
 
@@ -162,4 +164,3 @@ if __name__ == "__main__":
     logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.ERROR)
     main(sys.argv[1])
     logging.info("md update loop stopped")
-

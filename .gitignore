@@ -1,4 +1,5 @@
 venv/
+*.csv
 *.pyc
 .idea
 settings.py
