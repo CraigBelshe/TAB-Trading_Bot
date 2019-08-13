@@ -3,6 +3,7 @@ from datetime import datetime
 import sqlite3
 import logging
 import sys
+import json
 
 import requests
 
@@ -67,6 +68,9 @@ class MarketDataInterface:
     def update_ticker(self):
         try:
             ticker = self.get_ticker()
+            if ticker is None:
+                logging.warning('update ticker failed - None received')
+                return
             self.vwap = float(ticker.get('vwap', []))
             self.volume = float(ticker.get('volume', []))
             self.value = float(ticker.get('last', []))
@@ -79,7 +83,7 @@ class MarketDataInterface:
             )
             logging.info('ticker updated')
 
-        except (requests.exceptions.RequestException, sqlite3.Error):
+        except (requests.exceptions.RequestException, sqlite3.Error, AttributeError):
             logging.exception('update ticker failed')
 
     def get_order_book(self):
@@ -93,8 +97,9 @@ class MarketDataInterface:
         try:
             return requests.get(constants.BitstampAPI.endpoint.value.
                                 format(command='ticker', market=self.market)).json()
-        except requests.exceptions.RequestException:
+        except (requests.exceptions.RequestException, json.decoder.JSONDecodeError):
             logging.exception('failed to get ticker from exchange')
+            return None
 
     def update_order_book(self):
         try:

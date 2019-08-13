@@ -6,6 +6,7 @@ import logging
 import csv
 
 from market_data import MarketDataInterface
+from TAB_linear_inter.interpolation import FitCurve
 import settings
 
 
@@ -124,7 +125,7 @@ class TradingStrategy:
         if self.last_action == 'wait':
             self.last_action = 'buy'
             risk = Decimal('1')
-        elif last_balance < prev_balance:
+        elif Decimal(last_balance) < (Decimal('.997') * Decimal(prev_balance)):
             if self.last_action == 'sell':
                 self.last_action = 'buy'
                 risk = Decimal('1')
@@ -134,9 +135,13 @@ class TradingStrategy:
             else:
                 self.last_action = 'wait'
                 risk = Decimal('0')
-        elif last_balance > prev_balance:
+        elif Decimal(last_balance) > (Decimal('.997') * Decimal(prev_balance)):
             if self.last_action == 'sell':
-                risk = Decimal('-1')
+                if (self.md.get_ticker_data(False))[3] < (self.md.get_ticker_data(True))[3]:
+                    risk = Decimal('-1')
+                else:
+                    risk = Decimal('1')
+
             elif self.last_action == 'buy':
                 risk = Decimal('1')
             else:
@@ -147,7 +152,6 @@ class TradingStrategy:
             risk = Decimal('0')
 
         return risk
-
 
     def slope_indicator(self, period):
         slope = self.calc_slope(period)
@@ -183,13 +187,32 @@ class TradingStrategy:
 
         return risk
 
+    def interpolation_indicator(self, degree, period):
+        fc = FitCurve(degree)
+        data = self.md.get_all_ticker(period)
+        value = [t[3] for t in data]
+        timestamp = [time.mktime(datetime.strptime(t[2], '%Y-%m-%d %H:%M:%S').timetuple()) - 1.5652e9 for t in data]
+        x, y = fc.best_fit_curve(timestamp, value)
+        current_value = self.md.get_ticker_data(False)
+        if (y[-1]) < 0.997 * int(current_value[3]):
+            risk = Decimal('-1')
+        elif (y[-1]) > 1.003 * int(current_value[3]):
+            risk = Decimal('1')
+        else:
+            risk = 0
+        logging.info('calculated interpolation')
+
+        print('inter_pred = {0}, current = {1}'.format(y[-1], current_value))
+        return risk
+
     def get_final_strategy(self, name_csvfile):
         #  percent_risk = self.dual_mv_avg_indicator(10, 5)
         #  percent_risk = self.stochastic_indicator(14)
         #  percent_risk = self.slope_indicator(5)
         #  percent_risk = self.cross_mv_avg_indicator(10, 5)
         #  percent_risk = self.differences_indicator(60)
-        percent_risk = self.self_learning_indicator(name_csvfile)
+        #  percent_risk = self.self_learning_indicator(name_csvfile)
+        percent_risk = self.interpolation_indicator(3, 90)
 
         if percent_risk > 0.001:
             action = 'buy'
@@ -200,5 +223,5 @@ class TradingStrategy:
         logging.info('ts: final strategy. risk is {}'.format(percent_risk))
         return {'risk': abs(percent_risk), 'action': action}
 
-ts = TradingStrategy('ltcusd', 0)
-print(ts.slope_indicator(5))
+# ts = TradingStrategy('ltcusd', 0)
+# print(ts.slope_indicator(5))

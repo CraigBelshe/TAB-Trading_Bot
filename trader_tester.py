@@ -63,10 +63,17 @@ while True:
             amount = Decimal('0')
             logging.info('do not have minimum amount ({}) to trade'.format(constants.BTC_MIN))
 
-    balance_currency_one = balance_currency_one + amount
+    fee_one = Decimal('1')
+    fee_two = Decimal('1')
+    if action['action'] == 'buy':
+        fee_one = Decimal('0.9975')
+    elif action['action'] == 'sell':
+        fee_two = Decimal('0.9975')
+
+    balance_currency_one = balance_currency_one + (amount * fee_one)
     logging.info('bought {amount}{currency} at {price}{currency_two}'
                  .format(amount=amount, currency=market[:3], price=price, currency_two=market[:-3]))
-    balance_currency_two = balance_currency_two - (amount * price)
+    balance_currency_two = balance_currency_two - (amount * price * fee_two)
     logging.info('bought {amount}{currency} at {price}{currency_two}'
                  .format(amount=amount, currency=market[:3], price=price, currency_two=market[:-3]))
 
