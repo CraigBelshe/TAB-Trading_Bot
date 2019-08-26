@@ -172,10 +172,10 @@ class TradingStrategy:
     def stochastic_indicator(self, period):
         stochastic = self.calc_stochastic(period)
         if stochastic < 20:
-            risk = Decimal(str((20 - stochastic)/20))
+            risk = Decimal(str((20 - stochastic)/200))
             multiplier = 1
         elif stochastic > 80:
-            risk = Decimal(str((stochastic - 80)/20))
+            risk = Decimal(str((stochastic - 80)/200))
             multiplier = -1
         else:
             risk = Decimal('0')
