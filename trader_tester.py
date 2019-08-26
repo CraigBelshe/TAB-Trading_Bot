@@ -46,7 +46,7 @@ while True:
     print(action)
 
     if action['action'] == 'buy':
-        amount = Decimal(str(action['risk'] * balance_currency_two / price))
+        amount = Decimal(str(action['risk'])) * Decimal(str(balance_currency_two)) / Decimal(str(price))
     elif action['action'] == 'sell':
         amount = Decimal('-1') * Decimal(str((action['risk']))) * Decimal(str(balance_currency_one))
     else:

@@ -37,19 +37,19 @@ class FitCurve:
         for i in range(self.degree + 1):
             p0.append(1)
         values, unneeded = scipy.optimize.curve_fit(f=self.func, xdata=x, ydata=y, p0=p0, maxfev=100000)
-        list_x = np.linspace(min(x), (max(x) + (max(x)-min(x)) * .05), 10000)
+        list_x = np.linspace(min(x), (max(x) + (max(x)-min(x)) * .1), 10000)
         # plt.plot(list_x, [self.func(xi, *values) for xi in list_x], color='red')
         # plt.plot(x, y, color='blue')
         # plt.show()
         return list_x, [self.func(xi, *values) for xi in list_x]
 
-    def lagrange(self, x, y):
-        k = len(x) - 1
-        l = []
-
-        q = 1
-        for m in range(k + 1):
-            q = q
+    # def lagrange(self, x, y):
+    #     k = len(x) - 1
+    #     l = []
+    #
+    #     q = 1
+    #     for m in range(k + 1):
+    #         q = q
 
 
 

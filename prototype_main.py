@@ -37,7 +37,7 @@ def main():
         order_details = om.get_order_status(id)
 
         if action['action'] == "buy":
-            result = om.buy(pair=market, risk=action['risk'], price=price)
+            result = om.buy(risk=action['risk'], price=price)
             order_details = om.get_order_status(result)
             if result[0]:
                 logging.info('Successfully bought {0}{1} at {2}{3}'
@@ -46,7 +46,7 @@ def main():
                 logging.info('Buy failed')
 
         elif action['action'] == "sell":
-            result = om.sell(pair=market, risk=action['risk'], price=price)
+            result = om.sell(risk=action['risk'], price=price)
             order_details = om.get_order_status(result)
             if result:
                 logging.info('Successfully sold {0}{1} at {2}{3}'

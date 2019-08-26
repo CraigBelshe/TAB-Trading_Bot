@@ -172,10 +172,10 @@ class TradingStrategy:
     def stochastic_indicator(self, period):
         stochastic = self.calc_stochastic(period)
         if stochastic < 20:
-            risk = Decimal(str((20 - stochastic)/200))
+            risk = Decimal(str((20 - stochastic)/20))
             multiplier = 1
         elif stochastic > 80:
-            risk = Decimal(str((stochastic - 80)/200))
+            risk = Decimal(str((stochastic - 80)/20))
             multiplier = -1
         else:
             risk = Decimal('0')
@@ -212,7 +212,26 @@ class TradingStrategy:
         #  percent_risk = self.cross_mv_avg_indicator(10, 5)
         #  percent_risk = self.differences_indicator(60)
         #  percent_risk = self.self_learning_indicator(name_csvfile)
-        percent_risk = self.interpolation_indicator(3, 90)
+        #  percent_risk = self.interpolation_indicator(5, 4000)
+        #  percent_risk = self.interpolation_indicator(9, 4000)
+        #  percent_risk = self.interpolation_indicator(4, 800)  # interpolation_four
+        #  percent_risk = self.interpolation_indicator(4, 60)  # interpolation_five
+        #  percent_risk = self.interpolation_indicator(2, 15)  # interpolation six (last best performance)
+        #  percent_risk = self.interpolation_indicator(3, 30)  # interpolation seven
+        #  percent_risk = self.interpolation_indicator(3, 20)  # interpolation eight
+        #  percent_risk = self.interpolation_indicator(2, 5)  # interpolation nine
+        #  percent_risk = self.stochastic_indicator(15)  # stochastic
+        #  percent_risk = self.stochastic_indicator(30)  # stochastic two
+        #  percent_risk = self.stochastic_indicator(60)  # stochastic three
+        #  percent_risk = self.stochastic_indicator(720)  # stochastic four |
+        #  percent_risk = self.stochastic_indicator(1440)  # stochastic five || (best performance_stochastic)
+        #  percent_risk = self.stochastic_indicator(6)  # stochastic six
+        #  percent_risk = self.stochastic_indicator(15)  # stochastic seven  - risk divided by 20 instead of 200
+        #  percent_risk = self.stochastic_indicator(30)  # stochastic eight
+        #  percent_risk = self.stochastic_indicator(6)  # stochastic nine
+        #  percent_risk = self.interpolation_indicator(2, 20)  # interpolation ten (best performance)
+        #  percent_risk = self.interpolation_indicator(2, 10)  # interpolation eleven (gained)
+        percent_risk = self.interpolation_indicator(3, 15)  # interpolation twelve (also best performance)
 
         if percent_risk > 0.001:
             action = 'buy'
@@ -222,6 +241,3 @@ class TradingStrategy:
             action = 'wait'
         logging.info('ts: final strategy. risk is {}'.format(percent_risk))
         return {'risk': abs(percent_risk), 'action': action}
-
-# ts = TradingStrategy('ltcusd', 0)
-# print(ts.slope_indicator(5))

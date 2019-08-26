@@ -23,21 +23,26 @@ from market_data import MarketDataInterface
 # plt.show()
 
 
-def interpolate_ticker_curve(market, data_amount, degree):
+def interpolate_ticker_curve(market, data_start, data_len, degree):
     md = MarketDataInterface(market)
     fc = FitCurve(degree)
-    data = md.get_all_ticker(data_amount)
+    data = md.get_all_ticker(data_start)
+    print(data)
+    data_use = data[-data_len:]
     value = [t[3] for t in data]
     timestamp = [time.mktime(datetime.strptime(t[2], '%Y-%m-%d %H:%M:%S').timetuple()) - 1.5652e9 for t in data]
 
-    x, y = fc.best_fit_curve(timestamp, value)
+    value_use = [t[3] for t in data_use]
+    timestamp_use = [time.mktime(datetime.strptime(t[2], '%Y-%m-%d %H:%M:%S').timetuple()) - 1.5652e9 for t in data_use]
+    x, y = fc.best_fit_curve(timestamp_use, value_use)
     plt.plot(x, y, color='red', linewidth=.3)
     plt.plot(timestamp, value, color='blue', linewidth=0.1, markersize=6)
+    plt.axvline(x=timestamp_use[0], linewidth=0.5, linestyle=':', color='purple')
     plt.savefig('figure_one.pdf', dpi=1000)
     plt.show()
 
     return x, y
 
 
-x, y = interpolate_ticker_curve('btcusd', 30, 2)
+x, y = interpolate_ticker_curve('btcusd', 90, 5, 2)
 print(y[-1])
