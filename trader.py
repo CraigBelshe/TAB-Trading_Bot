@@ -93,7 +93,7 @@ def main():
 
         else:
             running = False
-            logging.error('Exiting Trader - unsupported action (supported actions: buy, sell, wait), {}'.format(action))
+            logging.error('exiting trader - unsupported action (supported actions: buy, sell, wait), {}'.format(action))
 
         sleep(1)
         open_orders = om.get_open_orders()
