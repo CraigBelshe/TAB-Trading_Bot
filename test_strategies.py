@@ -33,12 +33,9 @@ class FitCurve:
 
 
 class TradingStrategy:
-    def __init__(self, pair, num_entries_in_past):
-        self.dist_past = num_entries_in_past
+    def __init__(self, pair):
         self.pair = pair
         self.md = MarketDataInterface(pair)
-        id_num = int((self.md.get_ticker_data(False))[0])
-        self.past_id = int(id_num) - num_entries_in_past
         self.current_cross = None
         self.last_action = 'wait'
 
