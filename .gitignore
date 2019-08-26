@@ -1,5 +1,7 @@
 venv/
+*.pdf
+*.csv
 *.pyc
 .idea
 settings.py
-tab_market_data.db
+*.db

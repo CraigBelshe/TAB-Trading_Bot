@@ -2,6 +2,7 @@ import hmac
 import hashlib
 import time
 import logging
+import json
 
 import requests
 
@@ -36,15 +37,21 @@ class OrderManager:
 
     def get_balance(self):
         data = self.__get_signature()
-        account = requests.post((constants.BitstampAPI.endpoint.value
-                                 .format(command='balance', market=self.market)), data=data).json()
+        try:
+            account = requests.post((constants.BitstampAPI.endpoint.value
+                                     .format(command='balance', market=self.market)), data=data).json()
+        except json.decoder.JSONDecodeError:
+            logging.exception('could not retrieve account balance')
+            account = {}
+
         currency = self.market[:-3]
+        currency_two = self.market[-3:]
         balance = account.get('{currency}_balance'.format(currency=currency))
         available = account.get('{currency}_available'.format(currency=currency))
         reserved = account.get('{currency}_reserved'.format(currency=currency))
-        usd_available = account.get('usd_available')
+        usd_available = account.get('{currency}_available'.format(currency=currency_two))
         account_balance = {'balance': balance, 'available': available, 'reserved': reserved,
-                           'usd_available': usd_available}
+                           'second_available': usd_available}
         return account_balance
 
     def buy(self, price, amount):
@@ -108,6 +115,7 @@ class OrderManager:
         cancel_order = requests.post(constants.BitstampAPI.no_market.value
                                      .format(command='cancel_order'), data=data).json()
         if 'id' in cancel_order:
+            logging.info('canceled order id={}'.format(order_id))
             return True
 
         logging.info('failed to cancel order, {}'.format(cancel_order))
@@ -130,9 +138,14 @@ class OrderManager:
 
     def get_open_orders(self):
         data = self.__get_signature()
-        open_orders = requests.post((constants.BitstampAPI.endpoint.value
-                                     .format(command='open_orders', market=self.market)), data=data).json()
-        return open_orders
+        try:
+            open_orders = requests.post((constants.BitstampAPI.endpoint.value
+                                         .format(command='open_orders', market=self.market)), data=data).json()
+            return open_orders
+
+        except json.JSONDecodeError:
+            logging.exception('failed to retrieve open orders')
+            return None
 
     def get_transactions(self, num_trans=100):
         data = self.__get_signature()
