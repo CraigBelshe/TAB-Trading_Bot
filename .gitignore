@@ -1,5 +1,4 @@
 venv/
-*.db-journal
 *.pdf
 *.csv
 *.pyc

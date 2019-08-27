@@ -26,7 +26,7 @@ class FitCurve:
         p0 = []
         for i in range(self.degree + 1):
             p0.append(1)
-        values, _ = scipy.optimize.curve_fit(f=self.func, xdata=x, ydata=y, p0=p0, maxfev=100000)
+        values, unneeded = scipy.optimize.curve_fit(f=self.func, xdata=x, ydata=y, p0=p0, maxfev=100000)
         list_x = np.linspace(min(x), (max(x) + (max(x)-min(x)) * .1), 10000)
         return list_x, [self.func(xi, *values) for xi in list_x]
 
