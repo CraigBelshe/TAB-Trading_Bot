@@ -40,7 +40,7 @@ class OrderManager:
         try:
             account = requests.post((constants.BitstampAPI.endpoint.value
                                      .format(command='balance', market=self.market)), data=data).json()
-        except json.decoder.JSONDecodeError:
+        except (json.decoder.JSONDecodeError, requests.exceptions.RequestException):
             logging.exception('could not retrieve account balance')
             account = {}
 
@@ -58,8 +58,13 @@ class OrderManager:
 
         data = self.__get_signature()
         data.update({'amount': amount, 'price': price})
-        buy_limit_order = requests.post((constants.BitstampAPI.endpoint.value
-                                         .format(command='buy', market=self.market)), data=data).json()
+        try:
+            buy_limit_order = requests.post((constants.BitstampAPI.endpoint.value
+                                            .format(command='buy', market=self.market)), data=data).json()
+        except (json.decoder.JSONDecodeError, requests.exceptions.RequestException):
+            logging.exception('error when placing buy limit order')
+            buy_limit_order = {}
+
         if 'id' in buy_limit_order:
             return buy_limit_order['id']
 
@@ -69,8 +74,13 @@ class OrderManager:
     def sell(self, price, amount):
         data = self.__get_signature()
         data.update({'amount': amount, 'price': price})
-        sell_limit_order = requests.post((constants.BitstampAPI.endpoint.value
-                                          .format(command='sell', market=self.market)), data=data).json()
+        try:
+            sell_limit_order = requests.post((constants.BitstampAPI.endpoint.value
+                                              .format(command='sell', market=self.market)), data=data).json()
+        except (json.decoder.JSONDecodeError, requests.exceptions.RequestException):
+            logging.exception('error when placing sell limit order')
+            sell_limit_order = {}
+
         if 'id' in sell_limit_order:
             return sell_limit_order['id']
 
@@ -80,8 +90,13 @@ class OrderManager:
     def instant_buy(self, amount):
         data = self.__get_signature()
         data.update({'amount': amount})
-        buy_inst = requests.post((constants.BitstampAPI.endpoint.value
-                                  .format(command='buy/instant', market=self.market)), data=data).json()
+        try:
+            buy_inst = requests.post((constants.BitstampAPI.endpoint.value
+                                      .format(command='buy/instant', market=self.market)), data=data).json()
+        except (json.decoder.JSONDecodeError, requests.exceptions.RequestException):
+            logging.exception('error when placing buy instant order')
+            buy_inst = {}
+
         if 'id' in buy_inst:
             return buy_inst['id']
 
@@ -91,8 +106,13 @@ class OrderManager:
     def instant_sell(self, amount):
         data = self.__get_signature()
         data.update({'amount': amount})
-        sell_inst = requests.post((constants.BitstampAPI.endpoint.value
-                                   .format(command='sell/instant', market=self.market)), data=data).json()
+        try:
+            sell_inst = requests.post((constants.BitstampAPI.endpoint.value
+                                       .format(command='sell/instant', market=self.market)), data=data).json()
+        except (json.decoder.JSONDecodeError, requests.exceptions.RequestException):
+            logging.exception('error when placing sell instant order')
+            sell_inst = {}
+
         if 'id' in sell_inst:
             return sell_inst['id']
 
@@ -101,8 +121,13 @@ class OrderManager:
 
     def cancel_all_orders(self):
         data = self.__get_signature()
-        cancel_order = requests.post((constants.BitstampAPI.one.value
-                                      .format(command='cancel_all_orders')), data=data).json()
+        try:
+            cancel_order = requests.post((constants.BitstampAPI.one.value
+                                          .format(command='cancel_all_orders')), data=data).json()
+        except (json.decoder.JSONDecodeError, requests.exceptions.RequestException):
+            logging.exception('error when cancelling all orders')
+            cancel_order = False
+
         if cancel_order is True:
             return cancel_order
 
@@ -112,8 +137,13 @@ class OrderManager:
     def cancel_order(self, order_id):
         data = self.__get_signature()
         data.update({'id': order_id})
-        cancel_order = requests.post(constants.BitstampAPI.no_market.value
-                                     .format(command='cancel_order'), data=data).json()
+        try:
+            cancel_order = requests.post(constants.BitstampAPI.no_market.value
+                                         .format(command='cancel_order'), data=data).json()
+        except (json.decoder.JSONDecodeError, requests.exceptions.RequestException):
+            logging.exception('error when canceling order id={}'.format(order_id))
+            cancel_order = {}
+
         if 'id' in cancel_order:
             logging.info('canceled order id={}'.format(order_id))
             return True
@@ -124,8 +154,13 @@ class OrderManager:
     def get_order_status(self, order_id):
         data = self.__get_signature()
         data.update({'id': order_id})
-        order_status = requests.post(constants.BitstampAPI.one.value
-                                     .format(command='order_status'), data=data).json()
+        try:
+            order_status = requests.post(constants.BitstampAPI.one.value
+                                         .format(command='order_status'), data=data).json()
+        except (json.decoder.JSONDecodeError, requests.exceptions.RequestException):
+            logging.exception('error when retrieving order status for id={}'.format(order_id))
+            order_status = {}
+
         if order_status.get('status') == 'Finished':
             return constants.ORDER_STATUS_FINISHED
         elif order_status.get('status') == 'Open':
@@ -141,24 +176,34 @@ class OrderManager:
         try:
             open_orders = requests.post((constants.BitstampAPI.endpoint.value
                                          .format(command='open_orders', market=self.market)), data=data).json()
-            return open_orders
-
-        except json.JSONDecodeError:
+        except (json.JSONDecodeError, requests.exceptions.RequestException):
             logging.exception('failed to retrieve open orders')
             return None
+
+        return open_orders
 
     def get_transactions(self, num_trans=100):
         data = self.__get_signature()
         data.update({'limit': num_trans})
-        past_trans = requests.post((constants.BitstampAPI.endpoint.value
-                                    .format(command='user_transactions', market=self.market)), data=data).json()
+        try:
+            past_trans = requests.post((constants.BitstampAPI.endpoint.value
+                                        .format(command='user_transactions', market=self.market)), data=data).json()
+        except (json.JSONDecodeError, requests.exceptions.RequestException):
+            logging.exception('failed to get past {} transactions'.format(num_trans))
+            past_trans = None
+
         return past_trans
 
     def market_buy(self, amount):
         data = self.__get_signature()
         data.update({'amount': amount})
-        buy_market = requests.post((constants.BitstampAPI.endpoint.value
-                                    .format(command='buy/market', market=self.market)), data=data).json()
+        try:
+            buy_market = requests.post((constants.BitstampAPI.endpoint.value
+                                        .format(command='buy/market', market=self.market)), data=data).json()
+        except (json.JSONDecodeError, requests.exceptions.RequestException):
+            logging.exception('error when placing buy market order')
+            buy_market = {}
+
         if 'id' in buy_market:
             return buy_market['id']
 
@@ -168,8 +213,13 @@ class OrderManager:
     def market_sell(self, amount):
         data = self.__get_signature()
         data.update({'amount': amount})
-        sell_market = requests.post((constants.BitstampAPI.endpoint.value
-                                     .format(command='sell/market', market=self.market)), data=data).json()
+        try:
+            sell_market = requests.post((constants.BitstampAPI.endpoint.value
+                                         .format(command='sell/market', market=self.market)), data=data).json()
+        except (json.JSONDecodeError, requests.exceptions.RequestException):
+            logging.exception('error when placing sell market order')
+            sell_market = {}
+
         if 'id' in sell_market:
             return sell_market['id']
 

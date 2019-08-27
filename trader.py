@@ -31,9 +31,8 @@ def main():
         action = ts.get_final_strategy()
         price = Decimal(str((md.get_ticker_data(False))[3]))
 
-        time = datetime.datetime.now().timestamp()
-        if abs(time - (datetime.datetime.strptime(md.get_ticker_data(False)[2], '%Y-%m-%d %H:%M:%S'))
-                .timestamp()) > 600:
+        time = datetime.datetime.now()
+        if abs((time - datetime.datetime.strptime(md.get_ticker_data(False)[2], '%Y-%m-%d %H:%M:%S')).seconds) > 600:
             logging.error('database is out of date, exiting')
             running = False
 
