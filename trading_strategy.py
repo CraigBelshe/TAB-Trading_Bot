@@ -81,15 +81,15 @@ class TradingStrategy:
         print('inter_pred = {0}, current = {1}'.format(y[-1], current_value))
         return risk
 
-    def get_final_strategy(self):
+    def get_final_strategy(self, percent_error=0.001):
         #  percent_risk = self.stochastic_indicator(1440)
         percent_risk = self.interpolation_indicator(3, 15)
         #  percent_risk = self.interpolation_indicator(2, 20)
 
         try:
-            if percent_risk > 0.001:
+            if percent_risk > percent_error:
                 action = 'buy'
-            elif percent_risk < -0.001:
+            elif percent_risk < -1 * percent_error:
                 action = 'sell'
             else:
                 action = 'wait'
