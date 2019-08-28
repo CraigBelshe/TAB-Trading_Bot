@@ -68,7 +68,7 @@ while True:
     if action['action'] == 'buy':
         fee_one = Decimal('0.9975')
     elif action['action'] == 'sell':
-        fee_two = Decimal('0.9975')
+        fee_two = Decimal('1.0025')
 
     balance_currency_one = balance_currency_one + (amount * fee_one)
     logging.info('bought {amount}{currency} at {price}{currency_two}'

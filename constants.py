@@ -11,13 +11,9 @@ BTC_MIN = .001
 
 
 class BitstampAPI(Enum):
-    # endpoint = 'https://www.bitstamp.net/api/v2/{command}/{market}/'
-    # one = 'https://www.bitstamp.net/api/{command}/'
-    # no_market = 'https://www.bitstamp.net/api/v2/{command}/'
-    # transactions = 'https://www.bitstamp.net/api/v2/transactions/{market}'
-    # eur_usd = 'https://www.bitstamp.net/api/eur_usd/'
-    endpoint = 'https://front.qa.stagebts.net/api/v2/{command}/{market}/'
-    one = 'https://front.qa.stagebts.net/api/{command}/'
-    no_market = 'https://front.qa.stagebts.net/api/v2/{command}/'
-    transactions = 'https://front.qa.stagebts.net/api/v2/transactions/{market}'
-    eur_usd = 'https://front.qa.stagebts.net/api/eur_usd/'
+    endpoint = 'https://www.bitstamp.net/api/v2/{command}/{market}/'
+    one = 'https://www.bitstamp.net/api/{command}/'
+    no_market = 'https://www.bitstamp.net/api/v2/{command}/'
+    transactions = 'https://www.bitstamp.net/api/v2/transactions/{market}'
+    eur_usd = 'https://www.bitstamp.net/api/eur_usd/'
+
