@@ -3,6 +3,7 @@ from datetime import datetime
 import sqlite3
 import logging
 import sys
+import json
 
 import requests
 
@@ -23,6 +24,7 @@ class MarketDataInterface:
         self.bids = None
         self.asks = None
         self.order_cnt = 0
+        self.market_data_working_smoothly = True
 
     # Retrieving from Database
     def get_ticker_data(self, previous):
@@ -36,6 +38,7 @@ class MarketDataInterface:
             )[0]
         except (sqlite3.Error, IndexError):
             logging.exception('failed to get most recent ticker from db')
+            self.market_data_working_smoothly = False
             return [0, 0, 0, 0, 0, 0]
 
     def get_all_ticker(self, limit):
@@ -46,6 +49,7 @@ class MarketDataInterface:
             )
         except sqlite3.Error:
             logging.exception('failed to get ticker from db')
+            self.market_data_working_smoothly = False
 
     def get_order_book_asks(self):
         try:
@@ -54,6 +58,7 @@ class MarketDataInterface:
             )
         except sqlite3.Error:
             logging.exception('failed to get order book asks from db')
+            self.market_data_working_smoothly = False
 
     def get_order_book_bids(self):
         try:
@@ -62,15 +67,19 @@ class MarketDataInterface:
             )
         except sqlite3.Error:
             logging.exception('failed to get order book bids from db')
+            self.market_data_working_smoothly = False
 
     # Updating Database
     def update_ticker(self):
         try:
             ticker = self.get_ticker()
-            self.vwap = float(ticker['vwap'])
-            self.volume = float(ticker['volume'])
-            self.value = float(ticker['last'])
-            self.date = datetime.fromtimestamp(float(ticker['timestamp']))
+            if ticker is None:
+                logging.warning('update ticker failed - None received')
+                return
+            self.vwap = float(ticker.get('vwap', []))
+            self.volume = float(ticker.get('volume', []))
+            self.value = float(ticker.get('last', []))
+            self.date = datetime.fromtimestamp(float(ticker.get('timestamp', [])))
 
             utils.sql_exec(
                 'INSERT INTO ticker (pair, date, value, volume, vwap) '
@@ -79,20 +88,26 @@ class MarketDataInterface:
             )
             logging.info('ticker updated')
 
-        except (requests.exceptions.RequestException, sqlite3.Error):
+        except (requests.exceptions.RequestException, sqlite3.Error, AttributeError):
             logging.exception('update ticker failed')
+            self.market_data_working_smoothly = False
 
     def get_order_book(self):
         try:
-            return requests.get(constants.BitstampAPI.endpoint.value.format(command='order_book', market=self.market)).json()
+            return requests.get(constants.BitstampAPI.endpoint.value.
+                                format(command='order_book', market=self.market)).json()
         except requests.exceptions.RequestException:
             logging.exception('failed to get order book from exchange')
+            self.market_data_working_smoothly = False
 
     def get_ticker(self):
         try:
-            return requests.get(constants.BitstampAPI.endpoint.value.format(command='ticker', market=self.market)).json()
-        except requests.exceptions.RequestException:
+            return requests.get(constants.BitstampAPI.endpoint.value.
+                                format(command='ticker', market=self.market)).json()
+        except (requests.exceptions.RequestException, json.decoder.JSONDecodeError):
             logging.exception('failed to get ticker from exchange')
+            self.market_data_working_smoothly = False
+            return None
 
     def update_order_book(self):
         try:
@@ -131,6 +146,7 @@ class MarketDataInterface:
                 
         except (requests.exceptions.RequestException, sqlite3.Error):
             logging.exception('update order book failed')
+            self.market_data_working_smoothly = False
 
 # Getting from exchange
     def get_transactions(self):
@@ -139,6 +155,7 @@ class MarketDataInterface:
             return transactions.json()
         except requests.exceptions.RequestException:
             logging.exception('failed to get transactions from exchange')
+            self.market_data_working_smoothly = False
 
     def get_eur_usd(self):
         try:
@@ -147,14 +164,25 @@ class MarketDataInterface:
             self.sell_eur = convert['sell']
         except requests.exceptions.RequestException:
             logging.exception('failed to get eur_usd rate from exchange')
+            self.market_data_working_smoothly = False
 
 
 def main(market):
     md = MarketDataInterface(market)
     logging.info("beginning md update loop")
+    tracker = 0
     while True:
         md.update_ticker()
         md.update_order_book()
+        if md.market_data_working_smoothly:
+            tracker = 0
+        elif not md.market_data_working_smoothly:
+            md.market_data_working_smoothly = True
+            tracker += 1
+        if tracker == 10:
+            logging.error('something has gone wrong ten times in a row. market data will stop running')
+            break
+
         time.sleep(settings.LOOP_TIME)
 
 
@@ -162,4 +190,3 @@ if __name__ == "__main__":
     logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.ERROR)
     main(sys.argv[1])
     logging.info("md update loop stopped")
-

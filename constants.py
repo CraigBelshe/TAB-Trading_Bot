@@ -6,7 +6,7 @@ ORDER_STATUS_QUEUE = 'queue'
 MARKETS = ['btcusd', 'btceur', 'eurusd', 'xrpusd', 'xrpeur',
            'xrpbtc', 'ltcusd', 'ltceur', 'ltcbtc', 'ethusd',
            'etheur', 'ethbtc', 'bchusd', 'bcheur', 'bchbtc']
-EUR_USD_MIN_TRANSACTION_SIZE = .0000005
+EUR_USD_MIN_TRANSACTION_SIZE = 25
 BTC_MIN_TRANSACTION_SIZE = .001
 
 

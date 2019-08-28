@@ -1,25 +1,40 @@
 from decimal import Decimal
-from decimal import InvalidOperation
+import numpy as np
+import scipy.optimize
 import logging
+import time
+from datetime import datetime
+
 
 from market_data import MarketDataInterface
 import settings
+
+
+class FitCurve:
+    def __init__(self, degree):
+        self.degree = degree
+
+    # args are x value, then each coefficient in decreasing powers (y = ax^n + bx^n-1 + ... + cx^0)
+    def func(self, *args):
+        result = 0
+        for i in range(self.degree + 1):
+            result += (args[0]**i) * args[-1 * i - 1]
+
+        return result
+
+    def best_fit_curve(self, x, y):
+        p0 = []
+        for i in range(self.degree + 1):
+            p0.append(1)
+        values, _ = scipy.optimize.curve_fit(f=self.func, xdata=x, ydata=y, p0=p0, maxfev=100000)
+        list_x = np.linspace(min(x), (max(x) + (max(x)-min(x)) * .1), 10000)
+        return list_x, [self.func(xi, *values) for xi in list_x]
 
 
 class TradingStrategy:
     def __init__(self, pair):
         self.pair = pair
         self.md = MarketDataInterface(pair)
-
-    def calc_mv_avg(self, period):
-        data = self.md.get_all_ticker(period)
-        sums = Decimal(str(sum([x[3] for x in data])))
-        div = len(data)
-        try:
-            return Decimal(str(sums/div))
-        except InvalidOperation:
-            logging.exception('could not calculate moving average, is there data in the database?')
-            return None
 
     def calc_stochastic(self, period):
         data = self.md.get_all_ticker(period)
@@ -30,28 +45,6 @@ class TradingStrategy:
         last_ticker_value = Decimal(str((self.md.get_ticker_data(False))[3]))
 
         return (last_ticker_value - low) / (hi - low) * 100
-
-    def dual_mv_avg_indicator(self, long_period, short_period):
-        long_mv_avg = self.calc_mv_avg(long_period)
-        short_mv_avg = self.calc_mv_avg(short_period)
-        try:
-            if short_mv_avg > long_mv_avg:
-                multiplier = 1
-            elif short_mv_avg < long_mv_avg:
-                multiplier = -1
-            else:
-                multiplier = 0
-            risk = Decimal(str(abs(long_mv_avg - short_mv_avg) / 2000))
-            if risk > settings.MAX_RISK:
-                risk = settings.MAX_RISK
-            risk = risk * multiplier
-            logging.info('ts: calculated dual mv avg, risk is {}'.format(risk))
-
-            return risk
-
-        except TypeError:
-            logging.exception('could not calculate risk for dual moving average')
-            return None
 
     def stochastic_indicator(self, period):
         stochastic = self.calc_stochastic(period)
@@ -70,12 +63,33 @@ class TradingStrategy:
         logging.info('ts: calculated stochastic, risk is {}'.format(risk))
         return risk
 
-    def get_final_strategy(self):
-        percent_risk = self.dual_mv_avg_indicator(50, 10)
+    def interpolation_indicator(self, degree, period):
+        fc = FitCurve(degree)
+        data = self.md.get_all_ticker(period)
+        value = [t[3] for t in data]
+        timestamp = [time.mktime(datetime.strptime(t[2], '%Y-%m-%d %H:%M:%S').timetuple()) - 1.5652e9 for t in data]
+        x, y = fc.best_fit_curve(timestamp, value)
+        current_value = self.md.get_ticker_data(False)
+        if (y[-1]) < 0.997 * int(current_value[3]):
+            risk = Decimal(str(settings.MAX_RISK * -1))
+        elif (y[-1]) > 1.003 * int(current_value[3]):
+            risk = Decimal(str(settings.MAX_RISK))
+        else:
+            risk = 0
+        logging.info('calculated interpolation')
+
+        print('inter_pred = {0}, current = {1}'.format(y[-1], current_value))
+        return risk
+
+    def get_final_strategy(self, percent_error=0.001):
+        #  percent_risk = self.stochastic_indicator(1440)
+        percent_risk = self.interpolation_indicator(3, 15)
+        #  percent_risk = self.interpolation_indicator(2, 20)
+
         try:
-            if percent_risk > 0.01:
+            if percent_risk > percent_error:
                 action = 'buy'
-            elif percent_risk < -0.01:
+            elif percent_risk < -1 * percent_error:
                 action = 'sell'
             else:
                 action = 'wait'
