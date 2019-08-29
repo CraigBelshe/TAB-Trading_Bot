@@ -37,15 +37,6 @@ ax2.plot(x, price, color=colour, linewidth=0.1)
 ax2.tick_params(axis='y', labelcolor=colour)
 
 matplotlib.pyplot.title(name_csvfile, color='green')
-# fig.suptitle(name_csvfile)
 fig.tight_layout()
 matplotlib.pyplot.savefig('figure_two.pdf', dpi=1000)
 matplotlib.pyplot.show()
-
-# matplotlib.pyplot.plot(x, y, marker='o')
-# matplotlib.pyplot.plot(x, price, marker='o')
-# matplotlib.pyplot.xlabel('Time (s)')
-# matplotlib.pyplot.ylabel('Total account balance (USD)')
-# matplotlib.pyplot.title('Change in account value')
-#
-# matplotlib.pyplot.show()
